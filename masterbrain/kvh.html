@@ -1,0 +1,28 @@
+<html>
+
+<head>
+	<title>IPG - Mapping Visualization Tool</title>
+	<script src="match.js" ></script>
+	<script src="https://code.jquery.com/jquery-2.2.0.min.js" ></script>
+	<link rel="stylesheet" type="text/css" href="match.css" />
+</head>
+<body>
+
+<div id="search">
+<form action="javascript:search()">
+	<input id="endpoint" type="text" placeholder="endpoint" value="https://search-iprice-production-5-ho7odb2gltiotdxjrdotfluwxu.ap-southeast-1.es.amazonaws.com" size="50"/>
+	<input id="term" type="text" placeholder="keywords" autofocus="autofocus" size="75"/>
+	<input id="page" type="text" placeholder="#page" value="1" size="5"/>
+	<input id="page" type="button" placeholder="#next" value="+" onclick='next()'/>
+	<input id="page" type="button" placeholder="#prev" value="-" onclick='prev()'/>
+	<input type="submit" value="Search" />
+	<span id="status"></span>
+</form>
+</div>
+
+<div id="results">
+
+</div>
+
+</body>
+</html>
