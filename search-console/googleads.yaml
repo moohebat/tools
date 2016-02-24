@@ -1,0 +1,22 @@
+adwords:
+  developer_token: 5UtGrz1lIrTjH9iKA_LDIA
+  user_agent: Adword project:V 7.18
+  client_id: 400681195665-80h7fk2dhpo6f9m24q32dt39a8f27t26.apps.googleusercontent.com
+  client_secret: oNA_M4V5LgmefHT7422fZwyt
+  refresh_token: 1/Ou66keEiRZs4Jk6E27bpJq_JYsD_Ooby3nhFjkCgh8d90RDknAdJa_sgfheVM0XT
+  client_customer_id: 661-071-1224
+
+# The following values are optional:
+#  partial_failure: True
+#  validate_only: True
+
+# After approving the token enter the verification code (if specified).
+# Code: 4/pTqSj3X1p96QcAa5hK-b4FNE9qmYde5zBLn3oUuHR48
+# OAuth 2.0 authorization successful!
+
+# Your access token is:
+#  ya29.kgJM-JeE8Ic5HDYOI7PaiN3DSIbezYsXzgFcHcSAmYWsLJwZRs0Q3dHKrKTX5DBTow
+#
+# Your refresh token is:
+#  1/Ou66keEiRZs4Jk6E27bpJq_JYsD_Ooby3nhFjkCgh8d90RDknAdJa_sgfheVM0XT
+#
