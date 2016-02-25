@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # TODO: Retry logic
 
-import argparse, datetime, urllib, sys
+import argparse, datetime, urllib, socket, sys
 
 from datetime import date, timedelta
 from googleapiclient import sample_tools
@@ -9,110 +9,59 @@ from progress.bar import Bar
 
 reload(sys)
 sys.setdefaultencoding("UTF-8")
+socket.setdefaulttimeout(10)
 
-GA_IDS = {
-'SG':'75448761',
-'MY':'75229758',
-'ID':'75897118',
-'PH':'75445974',
-'TH':'79109064',
-'VN':'75895336',
-'HK':'75887160',
-}
-
-GSC_IDS = {
-'SG':'https://iprice.sg/',
-'MY':'https://iprice.my/',
-'ID':'https://iprice.co.id/',
-'PH':'https://iprice.ph/',
-'TH':'https://ipricethailand.com/',
-'VN':'https://iprice.vn/',
-'HK':'https://iprice.hk/',
-}
-
-GSC_OLD_IDS = {
-'SG':'http://iprice.sg/',
-'MY':'http://iprice.my/',
-'ID':'http://iprice.co.id/',
-'PH':'http://iprice.ph/',
-'TH':'http://ipricethailand.com/',
-'VN':'http://iprice.vn/',
-'HK':'http://iprice.hk/',
-}
-
+GA_IDS = { 'SG':'75448761', 'MY':'75229758','ID':'75897118', 'PH':'75445974', 'TH':'79109064', 'VN':'75895336', 'HK':'75887160' }
+GSC_IDS = { 'SG':'iprice.sg', 'MY':'iprice.my', 'ID':'iprice.co.id', 'PH':'iprice.ph', 'TH':'ipricethailand.com', 'VN':'iprice.vn', 'HK':'iprice.hk' }
 
 argparser = argparse.ArgumentParser(add_help=False)
 argparser.add_argument('cc', type=str, help=('Country code).'))
 argparser.add_argument('week', type=int, help=('Week number).'))
 
-year = 2016
-pages = 10
+YEAR, PAGES, PAGE_SIZE = 2016, 1000, 5000
 
 def get_top_landing_pages(service, cc, week, n):
   data = service.data().ga().get(
     ids='ga:' + GA_IDS[cc],
     start_index='1',
     max_results=n,
-    start_date=get_date(year, week)[0],
-    end_date=get_date(year, week)[1],
+    start_date=get_date(YEAR, week)[0],
+    end_date=get_date(YEAR, week)[1],
     sort='-ga:sessions',
     dimensions='ga:landingPagePath',
     metrics='ga:sessions',
     filters='ga:medium==organic').execute()
   return data['rows']
 
-def get_keyword_data(service, cc, week, url):
+def get_keyword_data(service, cc, week, url, protocol):
+  retry = 1
+  while retry >= 0:
+    try:
+      tmp = service.searchanalytics().query(
+        siteUrl = protocol + "://" + GSC_IDS[cc] + "/",
+        body = {
+          'startDate' : get_date(YEAR, week)[0],
+          'endDate' : get_date(YEAR, week)[1],
+          'dimensions' : ['query', 'date'],
+          'dimensionFilterGroups': [{
+            'filters' : [{
+              'dimension': 'page',
+              'expression' : protocol + "://" + GSC_IDS[cc] + "/" + urllib.quote(url.encode('utf-8')),
+              'operator' : 'equals'
+            }]
+          }],
+          'rowLimit': PAGE_SIZE
+        }).execute()
 
-  if week in [3, 4] and cc != 'VN':
-    old, new = True, True
-  elif week in [1, 2] and cc != 'VN':
-    old, new = True, False
-  else:
-    old, new = True, False
+      retry = -1
+      if 'rows' in tmp:
+        return tmp['rows']
 
-  data = []
+    except Exception:
+      retry = retry - 1
+      print >> sys.stderr, 'Failed downloading: %s' % (url)
 
-  if old:
-    tmp = service.searchanalytics().query(
-      siteUrl=GSC_OLD_IDS[cc],
-      body={
-        'startDate' : get_date(year, week)[0],
-        'endDate' : get_date(year, week)[1],
-        'dimensions' : ['query', 'date'],
-        'dimensionFilterGroups': [{
-          'filters' : [{
-            'dimension': 'page',
-            'expression' : GSC_OLD_IDS[cc] + urllib.quote(url.encode('utf-8')),
-            'operator' : 'equals'
-          }]
-        }],
-        'rowLimit': 5000
-      }).execute()
-
-    if 'rows' in tmp:
-      data.extend(tmp['rows'])
-
-  if new: 
-    tmp = service.searchanalytics().query(
-      siteUrl=GSC_IDS[cc],
-      body={
-        'startDate' : get_date(year, week)[0],
-        'endDate' : get_date(year, week)[1],
-        'dimensions' : ['query', 'date'],
-        'dimensionFilterGroups': [{
-          'filters' : [{
-            'dimension': 'page',
-            'expression' : GSC_IDS[cc] + urllib.quote(url.encode('utf-8')),
-            'operator' : 'equals'
-          }]
-        }],
-        'rowLimit': 5000
-      }).execute()
-
-    if 'rows' in tmp:
-      data.extend(tmp['rows'])
-
-  return data
+  return []
 
 def get_date(year, week):
     d = date(year,1,1)
@@ -120,16 +69,10 @@ def get_date(year, week):
     dlt = timedelta(days = (week-1)*7)
     return (d + dlt).isoformat(),  (d + dlt + timedelta(days=6)).isoformat()
 
-def initialize_ga(argv):
+def initialize_service(argv, id):
   service, flags = sample_tools.init(
-      argv, 'analytics', 'v3', __doc__, __file__, parents=[argparser],
-      scope='https://www.googleapis.com/auth/analytics.readonly')
-  return service
-
-def initialize_gsc(argv):
-  service, flags = sample_tools.init(
-      argv, 'webmasters', 'v3', __doc__, __file__, parents=[argparser],
-      scope='https://www.googleapis.com/auth/webmasters.readonly')
+      argv, id, 'v3', __doc__, __file__, parents=[argparser],
+      scope='https://www.googleapis.com/auth/' + id + '.readonly')
   return service
 
 def output(url, traffic, data):
@@ -141,15 +84,22 @@ def main(argv):
 
   print >> sys.stderr, '# Start: Keyword Data: %s, %s, %s' % (args.cc, args.week, datetime.datetime.now().time().isoformat())
 
-  ga = initialize_ga(argv)
-  gsc = initialize_gsc(argv)
+  ga, gsc = initialize_service(argv, "analytics"), initialize_service(argv, "webmasters")
 
   print '"%s"\t"%s"\t"%s"\t"%s"\t"%s"\t"%s"\t"%s"\t"%s"' % ("url", "date", "keyword", "impressions", "clicks", "ctr", "position", "sessions (week)")
   
-  bar = Bar('Processing', max=pages, suffix ='%(percent).1f%% - %(eta)ds')
-  urls = get_top_landing_pages(ga, args.cc, args.week, pages)
+  bar = Bar('Processing', max=PAGES, suffix ='%(percent).1f%% - %(eta)ds')
+  urls = get_top_landing_pages(ga, args.cc, args.week, PAGES)
   for row in urls:
-    data = get_keyword_data(gsc, args.cc, args.week, row[0][1:])
+
+    data = []
+
+    # we switched from http to https between week 3 and 4
+    if args.week <= 4 and args.cc != 'VN':
+      data.extend(get_keyword_data(gsc, args.cc, args.week, row[0][1:], "http"))
+    if args.week >=3 or args.cc == 'VN':
+      data.extend(get_keyword_data(gsc, args.cc, args.week, row[0][1:], "https"))
+
     output(row[0], row[1], data)
 
     bar.next()

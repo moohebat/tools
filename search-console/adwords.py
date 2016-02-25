@@ -9,7 +9,7 @@ from progress.bar import Bar
 reload(sys)
 sys.setdefaultencoding("UTF-8")
 
-countrycodes={'MY':'2458','TH':'2764','ID':'2360','HK':'2344','SG':'2702','PH':'2608','VN':'2704'}
+countrycodes = {'MY':'2458','TH':'2764','ID':'2360','HK':'2344','SG':'2702','PH':'2608','VN':'2704'}
 
 argparser = argparse.ArgumentParser(add_help=False)
 argparser.add_argument('cc', type=str, help=('Country code).'))
@@ -19,7 +19,7 @@ argparser.add_argument('file', type=str, help=('File with one keyword per line).
 
 PAGE_SIZE = 800
 
-def get_search_volume(service, cc, keywords):
+def query_adwords(service, cc, keywords, rtype):
 	selector = {
       'searchParameters': [
           {
@@ -32,7 +32,7 @@ def get_search_volume(service, cc, keywords):
           }
       ],
       'ideaType': 'KEYWORD',
-      'requestType': 'STATS',
+      'requestType': rtype,
       'requestedAttributeTypes': ['KEYWORD_TEXT', 'SEARCH_VOLUME','COMPETITION','AVERAGE_CPC'], #,'CATEGORY_PRODUCTS_AND_SERVICES'
       'paging': {
           'startIndex': str(0),
@@ -41,30 +41,6 @@ def get_search_volume(service, cc, keywords):
       'currencyCode': 'USD'
     }
 
-	return service.get(selector)
-
-def get_keyword_suggestions(service, cc, keywords):
-	selector = {
-      'searchParameters': [
-          {
-            'xsi_type': 'RelatedToQuerySearchParameter',
-            'queries': [keywords]
-          },
-          {
-            'xsi_type': 'LocationSearchParameter',
-            'locations': [{'id':countrycodes[cc]}]
-          }
-      ],
-      'ideaType': 'KEYWORD',
-      'requestType': 'IDEAS',
-      'requestedAttributeTypes': ['KEYWORD_TEXT', 'SEARCH_VOLUME','COMPETITION','AVERAGE_CPC'], #,'CATEGORY_PRODUCTS_AND_SERVICES'
-      'paging': {
-          'startIndex': str(0),
-          'numberResults': str(PAGE_SIZE)
-      },
-      'currencyCode': 'USD'
-    }
-	
 	return service.get(selector)
 
 def initialize_service():
@@ -113,19 +89,17 @@ def main(argv):
 		# pagination of 800 items
 		kws = keywords
 		while len(kws) > 0:
-			page = kws[0:800]
-			kws = kws[800:]
+			page = kws[0:PAGE_SIZE]
+			kws = kws[PAGE_SIZE:]
 
-			data = get_search_volume(service, args.cc, page)
-			output(data)
+			output(query_adwords(service, args.cc, page, "STATS"))
 
 			bar.next(len(page))
 
 	elif args.ideas:
 		# pagination of 1 item
 		for kw in keywords:
-			data = get_keyword_suggestions(service, args.cc, kw)
-			output(data)
+			output(get_keyword_suggestions(service, args.cc, "IDEAS"))
 
 			bar.next()
 
