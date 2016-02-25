@@ -1,10 +1,11 @@
 #!/usr/bin/python
 # TODO: Retry logic
 
-import argparse, urllib, sys
+import argparse, datetime, urllib, sys
 
 from datetime import date, timedelta
 from googleapiclient import sample_tools
+from progress.bar import Bar
 
 reload(sys)
 sys.setdefaultencoding("UTF-8")
@@ -29,12 +30,23 @@ GSC_IDS = {
 'HK':'https://iprice.hk/',
 }
 
+GSC_OLD_IDS = {
+'SG':'http://iprice.sg/',
+'MY':'http://iprice.my/',
+'ID':'http://iprice.co.id/',
+'PH':'http://iprice.ph/',
+'TH':'http://ipricethailand.com/',
+'VN':'http://iprice.vn/',
+'HK':'http://iprice.hk/',
+}
+
+
 argparser = argparse.ArgumentParser(add_help=False)
 argparser.add_argument('cc', type=str, help=('Country code).'))
 argparser.add_argument('week', type=int, help=('Week number).'))
 
 year = 2016
-pages = 1000
+pages = 10
 
 def get_top_landing_pages(service, cc, week, n):
   data = service.data().ga().get(
@@ -47,33 +59,60 @@ def get_top_landing_pages(service, cc, week, n):
     dimensions='ga:landingPagePath',
     metrics='ga:sessions',
     filters='ga:medium==organic').execute()
-  print data
   return data['rows']
 
 def get_keyword_data(service, cc, week, url):
-  data = service.searchanalytics().query(
-    siteUrl=GSC_IDS[cc],
-    body={
-      'startDate' : get_date(year, week)[0],
-      'endDate' : get_date(year, week)[1],
-      'dimensions' : ['query', 'date'],
-      'dimensionFilterGroups': [{
-        'filters' : [{
-          'dimension': 'page',
-          'expression' : GSC_IDS[cc] + urllib.quote(url.encode('utf-8')),
-          'operator' : 'equals'
-        }]
-      }],
-      'rowLimit': 5000
-    }).execute()
 
-  if 'rows' not in data:
-    print >> sys.stderr, "Failed downloading: %s, %s" % (url, data)
-    return []
+  if week in [3, 4] and cc != 'VN':
+    old, new = True, True
+  elif week in [1, 2] and cc != 'VN':
+    old, new = True, False
+  else:
+    old, new = True, False
 
-  print >> sys.stderr, "Downloaded: %s" % (url)
+  data = []
 
-  return data['rows']
+  if old:
+    tmp = service.searchanalytics().query(
+      siteUrl=GSC_OLD_IDS[cc],
+      body={
+        'startDate' : get_date(year, week)[0],
+        'endDate' : get_date(year, week)[1],
+        'dimensions' : ['query', 'date'],
+        'dimensionFilterGroups': [{
+          'filters' : [{
+            'dimension': 'page',
+            'expression' : GSC_OLD_IDS[cc] + urllib.quote(url.encode('utf-8')),
+            'operator' : 'equals'
+          }]
+        }],
+        'rowLimit': 5000
+      }).execute()
+
+    if 'rows' in tmp:
+      data.extend(tmp['rows'])
+
+  if new: 
+    tmp = service.searchanalytics().query(
+      siteUrl=GSC_IDS[cc],
+      body={
+        'startDate' : get_date(year, week)[0],
+        'endDate' : get_date(year, week)[1],
+        'dimensions' : ['query', 'date'],
+        'dimensionFilterGroups': [{
+          'filters' : [{
+            'dimension': 'page',
+            'expression' : GSC_IDS[cc] + urllib.quote(url.encode('utf-8')),
+            'operator' : 'equals'
+          }]
+        }],
+        'rowLimit': 5000
+      }).execute()
+
+    if 'rows' in tmp:
+      data.extend(tmp['rows'])
+
+  return data
 
 def get_date(year, week):
     d = date(year,1,1)
@@ -100,14 +139,23 @@ def output(url, traffic, data):
 def main(argv):
   args = argparser.parse_args()
 
+  print >> sys.stderr, '# Start: Keyword Data: %s, %s, %s' % (args.cc, args.week, datetime.datetime.now().time().isoformat())
+
   ga = initialize_ga(argv)
   gsc = initialize_gsc(argv)
 
-  #print '"%s"\t"%s"\t"%s"\t"%s"\t"%s"\t"%s"\t"%s"' % ("url", "date", "keyword", "impressions", "clicks", "ctr", "position")
+  print '"%s"\t"%s"\t"%s"\t"%s"\t"%s"\t"%s"\t"%s"\t"%s"' % ("url", "date", "keyword", "impressions", "clicks", "ctr", "position", "sessions (week)")
+  
+  bar = Bar('Processing', max=pages, suffix ='%(percent).1f%% - %(eta)ds')
   urls = get_top_landing_pages(ga, args.cc, args.week, pages)
   for row in urls:
     data = get_keyword_data(gsc, args.cc, args.week, row[0][1:])
     output(row[0], row[1], data)
+
+    bar.next()
+  bar.finish()
     
+  print >> sys.stderr, '# End: Keyword Data: %s, %s, %s' % (args.cc, args.week, datetime.datetime.now().time().isoformat())
+
 if __name__ == '__main__':
     main(sys.argv)

@@ -7,7 +7,7 @@ do
 
   for i in {1..8}
   do
-    python sc.py $cc $i >> $cc.csv
+    python search-console.py $cc $i >> $cc$i.csv
   done
 
 done

@@ -1,9 +1,10 @@
 #!/usr/bin/python
 # TODO: Retry logic
 
-import argparse, codecs, sys
+import argparse, codecs, datetime, sys
 
 from googleads import adwords
+from progress.bar import Bar
 
 reload(sys)
 sys.setdefaultencoding("UTF-8")
@@ -87,7 +88,7 @@ def output(data):
 						competition = attribute['value']['value']
 				elif attribute['key'] == 'AVERAGE_CPC':
 					if 'value' in attribute['value']:
-						cpc = attribute['value']['value']['microAmount']
+						cpc = int(attribute['value']['value']['microAmount']) / 1000000.0
 
 			print '"%s"\t"%s"\t"%s"\t"%s"' % (keyword, sv, competition, cpc)
 
@@ -100,11 +101,14 @@ def read_file(filename):
 def main(argv):
 	args = argparser.parse_args()
 
+	print >> sys.stderr, '# Start: Adwords Data: %s, %s' % (args.cc, datetime.datetime.now().time().isoformat())
+
 	service = initialize_service()
 	keywords = read_file(args.file)
 
-	print keywords[0]
+	print '"%s"\t"%s"\t"%s"\t"%s"' % ("keyword", "sv (month)", "competition", "cpc ($)")
 
+	bar = Bar('Processing', max=len(keywords), suffix ='%(percent).1f%% - %(eta)ds')
 	if args.stats:
 		# pagination of 800 items
 		kws = keywords
@@ -115,12 +119,19 @@ def main(argv):
 			data = get_search_volume(service, args.cc, page)
 			output(data)
 
-	if args.ideas:
+			bar.next(len(page))
+
+	elif args.ideas:
 		# pagination of 1 item
 		for kw in keywords:
-			print kw
 			data = get_keyword_suggestions(service, args.cc, kw)
 			output(data)
-    
+
+			bar.next()
+
+	bar.finish()
+	
+	print >> sys.stderr, '# End: Adwords Data: %s, %s' % (args.cc, datetime.datetime.now().time().isoformat())
+
 if __name__ == '__main__':
     main(sys.argv)
