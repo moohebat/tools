@@ -22,7 +22,7 @@ function search() {
 	} else if (lang === "vn") {
 		indices = "product_vn";
 	} else if (lang === "all") {
-		indices = "product_hk,product_sg,product_my,product_ph, product_id, product_th, product_vn";
+		indices = "product_hk,product_sg,product_my,product_ph,product_id,product_th,product_vn";
 	}
 
 	var query = {
