@@ -4,12 +4,26 @@ function search() {
 	$('#status').text('loading...');
 
 	var endpoint = $('#endpoint').val();
+	var lang = $('#lang').val();
 
 	var term = $('#term').val();
 	var size = "1000";
 	var page = $('#page').val();
 	var from = (parseInt(page) - 1) * size;
 	var to = (parseInt(page)) * size;
+
+	var indices = ""
+	if (lang === "en") {
+		indices = "product_hk,product_sg,product_my,product_ph";
+	} else if (lang === "id") {
+		indices = "product_id";
+	} else if (lang === "th") {
+		indices = "product_th";
+	} else if (lang === "vn") {
+		indices = "product_vn";
+	} else if (lang === "all") {
+		indices = "product_hk,product_sg,product_my,product_ph, product_id, product_th, product_vn";
+	}
 
 	var query = {
 		"query" : {
@@ -22,7 +36,7 @@ function search() {
 	};
 
 	$.ajax({
-		url: endpoint + "/product_hk,product_sg,product_my,product_ph,product_th,product_vn,product_id/_search",
+		url: endpoint + "/" + indices + "/_search",
 		type: "POST",
 		dataType: "json",
 		data: JSON.stringify(query),
