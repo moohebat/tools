@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# TODO: Retry logic
 
 import argparse, datetime, urllib, socket, sys
 
