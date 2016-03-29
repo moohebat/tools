@@ -101,8 +101,6 @@ function search() {
 
 		success: function(response) {
 
-			$('#results').empty();
-
 			console.log(response);
 			parse(response);
 
@@ -125,6 +123,7 @@ function parse(results) {
 	input = replace(input, "[HIGHEST PRICE]", getHighestPrice(results));
 	input = replace(input, "[LOWEST PRICE]", getLowestPrice(results));
 
+	$('#output').empty();
 	$('#output').append(input);
 }
 
