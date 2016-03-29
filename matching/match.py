@@ -37,9 +37,10 @@ def main(argv):
 		for keyword in keywords:
 			if regex[keyword].search(string):
 				matches = matches + 1
+				print 1, "\t", string, "\t", keyword
 				break
 		else:
-			print >> sys.stderr, matches, string
+			print 0, "\t", string
 		bar.next()
 
 	bar.finish()
