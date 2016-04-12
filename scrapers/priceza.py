@@ -21,7 +21,8 @@ class StackOverflowSpider(scrapy.Spider):
                 if prices > 0:
                     yield {
                         'name': item.css('h3::text').extract()[0],
-                        'prices': prices
+                        'prices': prices,
+                        'url' : response.urljoin(item.css('a::attr(href)').extract()[0])
                     }
             except:
                 pass

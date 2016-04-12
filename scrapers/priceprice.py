@@ -14,7 +14,8 @@ class StackOverflowSpider(scrapy.Spider):
             yield {
                 'category': response.css('#breadCrumbs span::text').extract()[1].strip("\n"),
                 'name': item.css('h3 > a::text').extract()[0],
-                'prices': item.css('span.pricenum::text').extract()[0]
+                'prices': item.css('span.pricenum::text').extract()[0],
+                'url' : response.urljoin(item.css('h3 > a::attr(href)').extract()[0])
             }
 
         next_page = response.css('.last a::attr(href)')
