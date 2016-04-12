@@ -7,7 +7,7 @@ import scrapy
 
 class StackOverflowSpider(scrapy.Spider):
     name = 'priceza'
-    start_urls = ['http://www.priceza.com/search']
+    start_urls = ['http://www.priceza.com/search', 'http://www.priceza.co.id/search']
 
     def parse(self, response):
         for item in response.css('div.products div.item.group'):
