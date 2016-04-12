@@ -15,12 +15,19 @@ class StackOverflowSpider(scrapy.Spider):
             prices = item.css('p.merchant span::text').extract();
             if prices:
                 prices = prices[0]
-                yield {
-                    'category': response.css('.breadCrumb .current a::text').extract()[0],
-                    'name': item.css('h3 > a::text').extract()[0],
-                    'prices': prices,
-                    'url' : response.urljoin(item.css('h3 > a::attr(href)').extract()[0])
-                }
+
+                try:
+                    prices = int(prices)
+
+                    if prices > 1:
+                        yield {
+                            'category': response.css('.breadCrumb .current a::text').extract()[0],
+                            'name': item.css('h3 > a::text').extract()[0],
+                            'prices': prices,
+                            'url' : response.urljoin(item.css('h3 > a::attr(href)').extract()[0])
+                        }
+                except:
+                    pass
 
         next_page = response.css('link[rel="next"]::attr(href)')
         if len(next_page) > 0:

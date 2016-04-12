@@ -18,7 +18,7 @@ class StackOverflowSpider(scrapy.Spider):
             try:
                 prices = int(prices)
 
-                if prices > 0:
+                if prices > 1:
                     yield {
                         'name': item.css('h3::text').extract()[0],
                         'prices': prices,
