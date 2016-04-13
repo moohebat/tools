@@ -1,10 +1,11 @@
 {
-  "name": "Blank new tab page",
-  "description": "Override the new tab page with a blank one",
-  "version": "0.2",
+  "name": "IPG Traffic Goal - New Tab",
+  "description": "Shows the monthly iprice traffic as a new tab",
+  "version": "0.1",
   "incognito": "split",
   "chrome_url_overrides": {
     "newtab": "blank.html"
   },
-  "manifest_version": 2
+  "manifest_version": 2,
+  "icons": { "48": "logo48.png" }
 }
