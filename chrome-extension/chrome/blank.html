@@ -1,5 +1,6 @@
 <html>
  <head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0">
   <title>New Tab</title>
   <script src="jquery-2.2.3.min.js"></script> 
   <script src="iprice.js"></script> 
@@ -9,16 +10,45 @@
     background-color: #f1f1f1;
     position: relative;
     color: #333;
+    font-size: 12px;
   }
   #container {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+    width: 525px;
+  }
+  .heading {
+    color: #999;
+    margin-bottom: 20px;
   }
   #logo {
     background-image: url("iprice.png");
     background-repeat: no-repeat;
+    float: left;
+    height: 100px;
+    width: 175px;
+    padding-top: 50px;
+  }
+  #month {
+    font-size: 12px;
+    display: block;
+    padding-left: 65px;
+    color: #999;
+  }
+  #week {
+    font-size: 12px;
+    padding-left: 50px;
+    color: #999;
+  }
+  hr {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    margin-left: 50px;
+    margin-right: 70px;
+    border: 1px solid #ccc;
+    height: 0px;
   }
   .text {
     margin-left: 175px;
@@ -33,7 +63,7 @@
   }
   button {
     position: absolute;
-    top: 209px;
+    bottom: 14px;
     right: 1px;
     width: 28px;
     height: 28px;
@@ -52,22 +82,37 @@
     background-color: #f1f1f1;
     cursor: pointer;
   }
-  .heading {
-    color: #999;
-    margin-bottom: 20px;
+
+  @media (max-width: 525px){
+    .heading {
+      text-align: center;
+    }
+    #container {
+      width: auto;
+    }
+    #logo {
+      float: none;
+      margin: 0px auto;
+    }
+    .text {
+      margin-left: 0px;
+      width: 260px;
+      text-align: center;
+      margin-top: 20px;
+    }
   }
   </style>
  </head>
  <body>
   <div id="container">
     <div class="heading">MONTHLY TRAFFIC GOAL</div>
-    <div id="logo"/>
-    <div class="text">#<b><span id='sessions'>...</span></b> traffic so far,</div>
-    <div class="text">we will reach <b><span id='goal'>...</span></b></div>
-    <div class="text">on <b><span id='day'>...</span></b> at <b><span id='time'>...</span><b/></div>
+    <div id="logo"><span id="month">&nbsp;</span><hr /><span id="week">&nbsp;</span></div>
+    <div class="text">#<b><span id='sessions'>...</span></b> traffic so far,
+    we will reach <b><span id='goal'>...</span></b>
+    on <b><span id='day'>...</span></b> at <b><span id='time'>...</span><b/></div>
     <form action="https://iprice.my/search/" method="GET">
-    <input type='search' name='term' placeholder="Search for products, coupons or brands on iprice..." />
-    <button type='submit'></button>
+      <input type='search' name='term' placeholder="Search on iprice for products, coupons or brands..." />
+      <button type='submit'></button>
     </form>
   </div>
  </body>

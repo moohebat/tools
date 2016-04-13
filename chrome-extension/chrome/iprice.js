@@ -22,6 +22,9 @@ function addCommas(nStr)
       var goal = data[2];
       var day = data[3];
       var time = data[4];
+      
+      var wow = data[6];
+      var mom = data[5];
 
       e = document.getElementById('goal');
       e.innerHTML = addCommas(goal);
@@ -34,6 +37,16 @@ function addCommas(nStr)
 
       e = document.getElementById('sessions');
       e.innerHTML = addCommas(sessions);
+
+      if (wow != undefined) {
+        e = document.getElementById('month');
+        e.innerHTML = addCommas(mom);
+      }
+
+      if (mom != undefined) {
+        e = document.getElementById('week');
+        e.innerHTML = addCommas(wow);
+      }
 
        window.setInterval(function(){
         sessions = sessions + increment;

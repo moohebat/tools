@@ -16,6 +16,7 @@ import httplib2, json
 service_account_email = 'chrome-extension@molten-nirvana-810.iam.gserviceaccount.com'
 key_file_location = 'ga.p12'
 scope = 'https://www.googleapis.com/auth/analytics.readonly'
+discovery = 'https://analyticsreporting.googleapis.com/$discovery/rest'
 
 GOAL = 1100000 # one million
 
@@ -30,32 +31,75 @@ PROFILES['TH'] = '79109064'
 PROFILES['VN'] = '75895336'
 PROFILES['HK'] = '75887160'
 
-def query_sessions(service, profile_id):
-  start_date = datetime.now().strftime("%Y-%m") + "-01"
-  data = service.data().ga().get(
-      ids='ga:' + profile_id,
-      start_date=start_date,
-      end_date='today',
-      metrics='ga:sessions').execute()
-  return int(data['rows'][0][0])
+def get_sessions(service):
+  year = datetime.now().year
+  month = datetime.now().month
+  day = datetime.now().day
+  hour = datetime.now().hour
+  minute = datetime.now().minute
+  weekday = datetime.now().weekday()
+
+  start_current_month = datetime(year, month, 1)
+  end_current_month = datetime(year, month, day) - timedelta(days=1)
+
+  start_current_week = datetime(year, month, day) - timedelta(days=weekday)
+  end_current_week = datetime(year, month, day) - timedelta(days=1)
+
+  start_last_month = datetime(year, month - 1, 1)
+  end_last_month = datetime(year, month - 1, day) - timedelta(days=1)
+
+  start_last_week = start_current_week - timedelta(days=7)
+  end_last_week = end_current_week - timedelta(days=7)
+
+  total, none = query_ga(service, start_current_month, datetime.now(), start_current_month, datetime.now())
+  this_month, last_month = query_ga(service, start_current_month, end_current_month, start_last_month, end_last_month)
+  this_week, last_week = query_ga(service, start_current_week, end_current_week, start_last_week, end_last_week)
+
+  return (total, this_month, last_month, this_week, last_week)
+
+def query_ga(service, firstStartDate, firstEndDate, secondStartDate, secondEndDate):
+  first, second = 0, 0
+
+  for cc, profile in PROFILES.iteritems():
+
+    data = service.reports().batchGet(
+    body={
+      "reportRequests": {
+        "viewId": 'ga:' + profile,
+        "dateRanges":[
+          {
+            "startDate": firstStartDate.strftime("%Y-%m-%d"),
+            "endDate": firstEndDate.strftime("%Y-%m-%d")
+          },
+          {
+            "startDate": secondStartDate.strftime("%Y-%m-%d"),
+            "endDate": secondEndDate.strftime("%Y-%m-%d")
+          }
+        ],
+        "metrics":[
+          {
+            "expression":"ga:sessions"
+          }]
+        }
+    }
+    ).execute()
+
+    first = first + int(data['reports'][0]['data']['rows'][0]['metrics'][0]['values'][0])
+    second = second + int(data['reports'][0]['data']['rows'][0]['metrics'][1]['values'][0])
+
+  return first, second
 
 def create_service():
 	credentials = ServiceAccountCredentials.from_p12_keyfile(service_account_email, key_file_location, scopes=[scope])
 	http = credentials.authorize(httplib2.Http())
-	return build("analytics", "v3", http=http)
-
-def get_total_sessions(service):
-	sessions = 0
-	for cc, profile in PROFILES.iteritems():
-		sessions = sessions + query_sessions(service, profile)
-	return sessions
+	return build("analyticsreporting", "v4", http=http, discoveryServiceUrl=discovery)
 
 def get_increment(sessions):
 	now = datetime.now()
 	seconds = ((now.day - 1) * 24 * 60 * 60) + (now.hour * 60 * 60) + (now.minute * 60) + now.second
 	return sessions / float(seconds)
 
-def get_goal_date(per_second):
+def get_goal_date(per_second, sessions):
 	remaining = GOAL - sessions
 	seconds = remaining / per_second
 	timestamp = datetime.now() + timedelta(seconds=seconds)
@@ -66,9 +110,11 @@ def write_data(values):
 	fb.put("/metrics", "ga", values)
 
 service = create_service()
-sessions = get_total_sessions(service)
-increment = get_increment(sessions)
-goal_date = get_goal_date(increment)
+sessions = get_sessions(service)
+increment = get_increment(sessions[0])
+goal_date = get_goal_date(increment, sessions[0])
+mom = '{:.1%}'.format((sessions[1] / float(sessions[2])) - 1)
+wow = '{:.1%}'.format((sessions[3] / float(sessions[4])) - 1)
 
-write_data([sessions, increment, GOAL, goal_date[0], goal_date[1]])
+write_data([sessions[0], increment, GOAL, goal_date[0], goal_date[1], mom, wow])
 
