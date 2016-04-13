@@ -1,7 +1,7 @@
 {
   "name": "IPG Traffic Goal - New Tab",
   "description": "Shows the monthly iprice traffic as a new tab",
-  "version": "0.1",
+  "version": "0.2",
   "incognito": "split",
   "chrome_url_overrides": {
     "newtab": "blank.html"
