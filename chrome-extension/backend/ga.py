@@ -9,6 +9,7 @@ from googleapiclient.discovery import build
 from oauth2client.service_account import ServiceAccountCredentials
 
 from datetime import datetime, timedelta
+from pytz import timezone
 from firebase import firebase
 
 import httplib2, json
@@ -32,12 +33,12 @@ PROFILES['VN'] = '75895336'
 PROFILES['HK'] = '75887160'
 
 def get_sessions(service):
-  year = datetime.now().year
-  month = datetime.now().month
-  day = datetime.now().day
-  hour = datetime.now().hour
-  minute = datetime.now().minute
-  weekday = datetime.now().weekday()
+  year = datetime.now(timezone('Asia/Kuala_Lumpur')).year
+  month = datetime.now(timezone('Asia/Kuala_Lumpur')).month
+  day = datetime.now(timezone('Asia/Kuala_Lumpur')).day
+  hour = datetime.now(timezone('Asia/Kuala_Lumpur')).hour
+  minute = datetime.now(timezone('Asia/Kuala_Lumpur')).minute
+  weekday = datetime.now(timezone('Asia/Kuala_Lumpur')).weekday()
 
   start_current_month = datetime(year, month, 1)
   end_current_month = datetime(year, month, day) - timedelta(days=1)
@@ -51,7 +52,7 @@ def get_sessions(service):
   start_last_week = start_current_week - timedelta(days=7)
   end_last_week = end_current_week - timedelta(days=7)
 
-  total, none = query_ga(service, start_current_month, datetime.now(), start_current_month, datetime.now())
+  total, none = query_ga(service, start_current_month, datetime.now(timezone('Asia/Kuala_Lumpur')), start_current_month, datetime.now(timezone('Asia/Kuala_Lumpur')))
   this_month, last_month = query_ga(service, start_current_month, end_current_month, start_last_month, end_last_month)
   this_week, last_week = query_ga(service, start_current_week, end_current_week, start_last_week, end_last_week)
 
@@ -95,14 +96,14 @@ def create_service():
 	return build("analyticsreporting", "v4", http=http, discoveryServiceUrl=discovery)
 
 def get_increment(sessions):
-	now = datetime.now()
+	now = datetime.now(timezone('Asia/Kuala_Lumpur'))
 	seconds = ((now.day - 1) * 24 * 60 * 60) + (now.hour * 60 * 60) + (now.minute * 60) + now.second
 	return sessions / float(seconds)
 
 def get_goal_date(per_second, sessions):
 	remaining = GOAL - sessions
 	seconds = remaining / per_second
-	timestamp = datetime.now() + timedelta(seconds=seconds)
+	timestamp = datetime.now(timezone('Asia/Kuala_Lumpur')) + timedelta(seconds=seconds)
 	return (timestamp.strftime("%d.%m.%Y"), timestamp.strftime("%H:%M"))
 
 def write_data(values):
