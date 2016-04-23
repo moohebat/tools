@@ -1,5 +1,5 @@
 # coding=utf-8
-import sys
+import re, sys
 reload(sys)
 sys.setdefaultencoding("utf-8")
 
@@ -7,13 +7,13 @@ import scrapy
 
 class StackOverflowSpider(scrapy.Spider):
     name = 'priceza'
-    start_urls = ['http://www.priceza.com/search', 'http://www.priceza.co.id/search']
+    start_urls = ['http://www.priceza.com.my/search', 'http://www.priceza.com.sg/search', 'http://www.priceza.com.ph/search', 'http://www.priceza.com.vn/search', 'http://www.priceza.com/search', 'http://www.priceza.co.id/search']
 
     def parse(self, response):
         for item in response.css('div.products div.item.group'):
 
             prices = item.css('small a::text').extract()[0]
-            prices = prices.strip("dari").strip("TOKO").strip(" ").strip("จาก").strip("ร้านค้า")
+            prices = re.sub("[^0-9]", "", prices)
 
             try:
                 prices = int(prices)
