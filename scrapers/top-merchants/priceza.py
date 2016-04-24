@@ -9,7 +9,7 @@ import scrapy
 import codecs
 
 class StackOverflowSpider(scrapy.Spider):
-    name = 'priceprice'
+    name = 'priceza'
     start_urls = [l.strip() for l in codecs.open("priceza4.txt", encoding="utf8").readlines()]
     #start_urls = ["http://www.priceza.co.id/p/harga/Acer-Liquid-Z5-(3G-AIS)/1392455"]
 
