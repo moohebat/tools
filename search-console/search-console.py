@@ -1,4 +1,6 @@
 #!/usr/bin/python
+# pip install --upgrade google-api-python-client
+# pip install progress
 
 import argparse, datetime, urllib, socket, sys
 
@@ -65,7 +67,7 @@ def get_keyword_data(service, cc, week, url, protocol):
 def get_date(year, week):
     d = date(year,1,1)
     d = d - timedelta(d.weekday())
-    dlt = timedelta(days = (week-1)*7)
+    dlt = timedelta(days = week*7)
     return (d + dlt).isoformat(),  (d + dlt + timedelta(days=6)).isoformat()
 
 def initialize_service(argv, id):
