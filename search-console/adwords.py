@@ -45,7 +45,7 @@ def query_adwords(service, cc, keywords, rtype):
 
 def initialize_service():
 	client = adwords.AdWordsClient.LoadFromStorage('googleads.yaml')
-	service = client.GetService('TargetingIdeaService', version='v201506')
+	service = client.GetService('TargetingIdeaService', version='v201603')
 	return service
 
 def output(data):
