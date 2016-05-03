@@ -2,6 +2,7 @@
 # pip install lxml
 
 import csv, codecs, json, re, sys
+from collections import OrderedDict
 from lxml import html, cssselect
 from HTMLParser import HTMLParser
 
@@ -75,6 +76,15 @@ def empty_paragraph(dom):
 			broken = broken + 1
 	return broken
 
+def spaces_at_end(string):
+	matches = re.findall(r"(&nbsp;</)|( </)", string)
+	return len(matches)
+	
+def double_spaces(string):
+	string = HTMLParser().unescape(re.sub('<[^<]+?>', '', string).strip())
+	matches = re.findall(r"(&nbsp;&nbsp;)|(  )", string)
+	return len(matches)
+	
 def missing_table_header(dom):
 	elements = dom.cssselect("table")
 	broken = 0
@@ -116,8 +126,9 @@ def calculate_stats(data):
 		if not topText and not bottomText and not leftText:
 			continue
 		
-		stat = {}
-		stat['URL'] = get_field('url', row)
+		stat = OrderedDict()
+		stat['URL'] = "/" + get_field('url', row) + "/"
+		stat['CC'] = row['_index'].split("_")[1]
 		
 		type = row['_type']
 		if type in ['brand', 'category', 'filtered']:
@@ -181,6 +192,8 @@ def calculate_stats(data):
 		stat['Missing_Table_Header'] = missing_table_header(domBottomText)
 		stat['Table_Width_Height'] = table_width_height(domBottomText)
 		stat['Image_Not_CDN'] = image_not_cdn(domBottomText)
+		stat['Spaces_At_End'] = spaces_at_end(bottomText)
+		stat['Double_Spaces'] = spaces_at_end(bottomText)
 		
 		stats.append(stat)
 		
