@@ -18,8 +18,9 @@ GSC_IDS = { 'SG':'iprice.sg', 'MY':'iprice.my', 'ID':'iprice.co.id', 'PH':'ipric
 argparser = argparse.ArgumentParser(add_help=False)
 argparser.add_argument('cc', type=str, help=('Country code).'))
 argparser.add_argument('week', type=int, help=('Week number).'))
+argparser.add_argument('pages', type=int, help=('Top N pages).'))
 
-YEAR, PAGES, PAGE_SIZE = 2016, 1000, 5000
+YEAR, PAGE_SIZE = 2016, 5000
 
 def get_top_landing_pages(service, cc, week, n):
   data = service.data().ga().get(
@@ -89,8 +90,8 @@ def main(argv):
 
   print '"%s"\t"%s"\t"%s"\t"%s"\t"%s"\t"%s"\t"%s"\t"%s"' % ("url", "date", "keyword", "impressions", "clicks", "ctr", "position", "sessions (week)")
   
-  bar = Bar('Processing', max=PAGES, suffix ='%(percent).1f%% - %(eta)ds')
-  urls = get_top_landing_pages(ga, args.cc, args.week, PAGES)
+  bar = Bar('Processing', max=args.pages, suffix ='%(percent).1f%% - %(eta)ds')
+  urls = get_top_landing_pages(ga, args.cc, args.week, args.pages)
   for row in urls:
 
     data = []
