@@ -151,6 +151,7 @@ def calculate_stats(data):
 		elif type in ['store', 'couponCategory']:
 			stat['Product'] = 'Coupon'
 			stat['SubProduct'] = type
+			stat['URL'] = "/coupons" + stat['URL']
 		else:
 			print sys.stderr > "Unknown type: %s" % type
 		
