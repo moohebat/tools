@@ -57,7 +57,16 @@ def image_count(string):
 def link_count(string):
 	matches = re.findall(r"(</a>)", string)
 	return len(matches)
+	
+def has_title(string):
+	return len(string) > 0
 
+def has_heading(string):
+	return len(string) > 0
+
+def has_meta(string):
+	return len(string) > 0
+	
 # HTML Rules
 def single_item_list(dom):
 	elements = dom.cssselect("ul, ol")
@@ -159,6 +168,10 @@ def calculate_stats(data):
 		domLeftText = html.fragment_fromstring(leftText, create_parent="div")
 		domBottomText = html.fragment_fromstring(bottomText, create_parent="div")
 		
+		stat['Has_Title'] = str(has_title(get_field('title', row)))
+		stat['Has_Meta'] = str(has_meta(get_field('meta', row)))
+		stat['Has_Heading'] = str(has_heading(get_field('heading', row)))
+
 		stat['Top_Characters'] = character_count(topText)
 		stat['Left_Character'] = character_count(leftText)
 		stat['Bottom_Characters'] = character_count(bottomText)
