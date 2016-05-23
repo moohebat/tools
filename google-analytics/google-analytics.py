@@ -7,11 +7,10 @@
 # - Support for custom dimensions, remove custom dimensions for dates before CW 21  
 # - Support for more than 10 metrics, by running multiple queries
 
-import argparse, ConfigParser, datetime, urllib, socket, re, sys
+import argparse, ConfigParser, datetime, urllib, socket, re, pandas, sys
 
 from datetime import date, datetime, timedelta
 from pprint import pprint
-from pandas import DataFrame
 
 from googleapiclient import sample_tools
 
@@ -167,8 +166,9 @@ def main(argv):
   ga = initialize_service(argv, "analytics")
   
   query = parse_query(args.query)
+  headers = query['dimensions'].split(",") +query['metrics'].split(",")  
 
-  data = []
+  output = pandas.DataFrame()
   for website in GA_IDS[args.cc]:
   
     # Quirk: Our CGs in SG are offset one from the rest
@@ -177,12 +177,17 @@ def main(argv):
       for cg in reversed(re.compile('(ga:contentGroup([0-9]{1,2}))').findall(newQuery['dimensions'])):
         newQuery['dimensions'] = newQuery['dimensions'].replace(cg[0], 'ga:contentGroup' + str(int(cg[1]) + 1))
 
-    data += call(ga, args.cc, website, args.week, newQuery)
+    data = call(ga, args.cc, website, args.week, newQuery)
 
-  headers = query['dimensions'].split(",") +query['metrics'].split(",")  
-  df = DataFrame(data, columns = headers)
-  df = process(args.cc, website, df)
-  df.to_csv(sys.stdout, header=True, index=False)
+    if len(data) == 0:
+	print >> sys.stderr, 'Query did not return any data for website %s' % (website)
+        continue
+
+    df = pandas.DataFrame(data, columns = headers)
+    df = process(args.cc, website, df)
+    output = pandas.concat([output, df])
+
+  output.to_csv(sys.stdout, header=True, index=False)
 
   print >> sys.stderr, '# End: Keyword Data: %s, %s, %s, %s' % (args.cc, args.week, args.query, datetime.now().time().isoformat())
 
