@@ -3,7 +3,7 @@
 # pip install progress
 
 # TODO:
-# - Support for merchant ID  
+# - Support for merchant IDs in conversion reports  
 # - Support for more than 10 metrics, by running multiple queries
 
 import argparse, ConfigParser, datetime, urllib, socket, re, pandas, sys
@@ -104,6 +104,21 @@ def parse_device(value):
   else:
     return value
 
+def parse_merchant(value):
+   split = str(value).split("|")
+   
+   merchantName = "n/a"
+   merchantCode = "n/a"
+   
+   if len(split) > 0:
+    if split[0] != "" and split[0] != "nan":
+      merchantName = split[0]
+   if len(split) > 1:
+     if split[1] != "" and split[1] != "nan":
+      merchantCode = split[1]
+      
+   return (merchantName, merchantCode)
+
 def parse_product(value1, value2, website):
   value1 = value1.lower()
   value2 = value2.lower()
@@ -157,6 +172,9 @@ def process(cc, website, df):
     df['ipg:product'] = df.apply(lambda x: parse_product(x['ga:contentGroup1'], '', website)[0], axis=1)
   if 'ga:contentGroup1' in df and 'ga:contentGroup2' in df:
     df['ipg:subProduct'] = df.apply(lambda x: parse_product(x['ga:contentGroup1'], x['ga:contentGroup2'], website)[1], axis=1)
+  if 'ga:dimension6' in df:
+    df['ipg:merchantName'] = df.apply(lambda x: parse_merchant(x['ga:dimension6'])[0], axis=1)
+    df['ipg:merchantCode'] = df.apply(lambda x: parse_merchant(x['ga:dimension6'])[1], axis=1)
     
   return df
 
@@ -185,7 +203,7 @@ def main(argv):
   ga = initialize_service(argv, "analytics")
   
   query = parse_query(args.query)
-  headers = query['dimensions'].split(",") +query['metrics'].split(",")  
+  headers = query['dimensions'].split(",") + query['metrics'].split(",")  
 
   output = pandas.DataFrame()
   for website in GA_IDS[args.cc]:
@@ -195,6 +213,13 @@ def main(argv):
     if args.cc == "SG" and website == "IPRICE":
       for cg in reversed(re.compile('(ga:contentGroup([0-9]{1,2}))').findall(newQuery['dimensions'])):
         newQuery['dimensions'] = newQuery['dimensions'].replace(cg[0], 'ga:contentGroup' + str(int(cg[1]) + 1))
+    
+    # Quirk: Merchant code was only introduced in CW13 and does not exist for CooD yet
+    cd6 = re.compile('(,ga:dimension6)').findall(newQuery['dimensions'])
+    if len(cd6) > 0 and (int(args.week.split("-")[1]) < 13 or website != "IPRICE"):
+      newQuery['dimensions'] = newQuery['dimensions'].replace(cd6[0], '')
+
+    newHeaders = newQuery['dimensions'].split(",") + newQuery['metrics'].split(",")  
 
     data = call(ga, args.cc, website, args.week, newQuery)
 
@@ -202,8 +227,12 @@ def main(argv):
       print >> sys.stderr, 'Warning: Query did not return any data for website %s' % (website)
       continue
 
-    df = pandas.DataFrame(data, columns = headers)
+    # need to get all columns in if some where cut previously 
+    df = pandas.DataFrame(columns = headers)
+    dfNew = pandas.DataFrame(data, columns = newHeaders)
+    df = pandas.concat([df, dfNew])
     df = process(args.cc, website, df)
+    
     output = pandas.concat([output, df])
 
   output.to_csv(sys.stdout, header=True, index=False)
