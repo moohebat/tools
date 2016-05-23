@@ -3,8 +3,7 @@
 # pip install progress
 
 # TODO:
-# - Improve product / sub-product parsing to the next level
-# - Support for custom dimensions, remove custom dimensions for dates before CW 21  
+# - Support for merchant ID  
 # - Support for more than 10 metrics, by running multiple queries
 
 import argparse, ConfigParser, datetime, urllib, socket, re, pandas, sys
@@ -105,27 +104,45 @@ def parse_device(value):
   else:
     return value
 
-def parse_product(value, website):
-  # media partners didn't have content groups set for a long time
-  if value == '(not set)' and website != 'IPRICE':
-    return 'coupon'
+def parse_product(value1, value2, website):
+  value1 = value1.lower()
+  value2 = value2.lower()
+
+  product, subproduct = 'n/a', 'n/a'
+
+  # media partners don't fully support content groups right now
+  if value1 == '(not set)' and website != 'IPRICE':
+    product = 'coupon'
 
   # backwards compatibility with old usage of ga:ContentGroup1
-  value = value.lower()
-  if value in ['shop', 'brand', 'mixed', 'category', 'search']:
-    return 'shop'
+  elif value1 in ['shop', 'brand', 'mixed', 'category', 'search', 'shingle', 'gender', 'list']:
+    product = 'shop'
   
-  if value in ['coupons', 'coupon', 'coupon-store', 'coupon-category']:
-    return 'coupon'
+  elif value1 in ['coupons', 'coupon', 'coupon-store', 'coupon-category']:
+    product = 'coupon'
       
-  if value in ['static', 'home', 'info', 'page', 'blog', 'redirect']:
-    return 'static'
+  elif value1 in ['static', 'home', 'info', 'page', 'blog', 'redirect']:
+    product = 'static'
 
-  if value == '(not set)':
-    return 'n/a'
+  # backwards compatibility with old usage of ga:ContentGroup1
+  if value2 != '(not set)':
+    subproduct = value2
   
-  print>> sys.stderr, "Warning: Can't parse product '%s'" % value
-  return ""
+  elif value1 in ['brand', 'mixed', 'category', 'search']:
+    subproduct = value1
+  
+  elif value1 in ['coupon-store', 'coupon-category']:
+    subproduct = value1
+      
+  elif value1 in ['static', 'home', 'info', 'page', 'blog', 'redirect']:
+    subproduct = value1
+
+  if product == 'n/a' and value1 != '(not set)' and value1 != '':
+    print>> sys.stderr, "Warning: Can't parse product '%s'" % value
+  if subproduct == 'n/a' and value2 != '(not set)' and value2 != '':
+    print>> sys.stderr, "Warning: Can't parse subproduct '%s'" % value
+    
+  return (product, subproduct)
 
 def process(cc, website, df):
   df['ipg:cc'] = cc;
@@ -137,7 +154,9 @@ def process(cc, website, df):
   if 'ga:deviceCategory' in df:
     df['ipg:device'] = df.apply(lambda x: parse_device(x['ga:deviceCategory']), axis=1)
   if 'ga:contentGroup1' in df:
-    df['ipg:product'] = df.apply(lambda x: parse_product(x['ga:contentGroup1'], website), axis=1)
+    df['ipg:product'] = df.apply(lambda x: parse_product(x['ga:contentGroup1'], '', website)[0], axis=1)
+  if 'ga:contentGroup1' in df and 'ga:contentGroup2' in df:
+    df['ipg:subProduct'] = df.apply(lambda x: parse_product(x['ga:contentGroup1'], x['ga:contentGroup2'], website)[1], axis=1)
     
   return df
 
@@ -180,8 +199,8 @@ def main(argv):
     data = call(ga, args.cc, website, args.week, newQuery)
 
     if len(data) == 0:
-	print >> sys.stderr, 'Query did not return any data for website %s' % (website)
-        continue
+      print >> sys.stderr, 'Warning: Query did not return any data for website %s' % (website)
+      continue
 
     df = pandas.DataFrame(data, columns = headers)
     df = process(args.cc, website, df)
