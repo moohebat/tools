@@ -17,7 +17,7 @@ do
 
   for i in $CW 
   do
-    python search-console.py $cc 2016-$i 10 > /srv/ftp/search-console/$DATE/10k-$cc-$i.csv 2>> $OUTPUT/$DATE/error.log
+    python search-console.py $cc 2016-$i 10000 > /srv/ftp/search-console/$DATE/10k-$cc-$i.csv 2>> $OUTPUT/$DATE/error.log
 
     head -q -n1 $OUTPUT/$DATE/10k-$cc-$i.csv > $OUTPUT/$DATE/10k-$cc.csv
   done
