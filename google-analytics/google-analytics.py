@@ -3,7 +3,6 @@
 # pip install progress
 
 # TODO:
-# - Support for merchant IDs in conversion reports  
 # - Support for more than 10 metrics, by running multiple queries
 
 import argparse, ConfigParser, datetime, urllib, socket, re, pandas, sys
