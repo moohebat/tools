@@ -1,7 +1,7 @@
 #!/bin/sh
 # npm install -g elasticdump
 
-DB=https://search-iprice-production-6-kqdyyfrc7tpaznra3ahtmgalwa.ap-southeast-1.es.amazonaws.com
+DB=https://search-iprice-production-7-pluvqb7oq6wnsisr4k6j62qtlq.ap-southeast-1.es.amazonaws.com
 DATE=$(date +"%Y%m%d%H%M")
 
 #OUTPUT=output
