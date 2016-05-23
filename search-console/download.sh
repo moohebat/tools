@@ -1,20 +1,28 @@
 #!/bin/sh
 
 DATE=$(date +"%Y%m%d%H%M")
-CW=$(date --date="3 days ago" +"%V")
 
-# Mac OSX
-# CW=$(date -v-3d)
+OUTPUT=output
+#OUTPUT=/srv/ftp/search-console
 
-mkdir /srv/ftp/search-console/$DATE/
+# Mac OSX format
+CW=$(date -v-3d)
+# Linux format
+#CW=$(date --date="3 days ago" +"%V")
 
-for i in $CW 
+mkdir $OUTPUT/$DATE
+
+for cc in MY ID HK PH SG TH VN
 do
 
-  for cc in MY ID HK PH SG TH VN
+  for i in $CW 
   do
-    python search-console.py $cc $i 10 > /srv/ftp/search-console/$DATE/$cc-$i-10k.csv
+    python search-console.py $cc 2016-$i 10000 > /srv/ftp/search-console/$DATE/10k-$cc-$i.csv 2>> $OUTPUT/$DATE/error.log
   done
+  
+  cat $OUTPUT/$DATE/10k-$cc-*.csv > $OUTPUT/$DATE/10k-$cc.csv
 
 done
+
+cat $OUTPUT/$DATE/10k-*-*.csv > $OUTPUT/$DATE/10k.csv
 

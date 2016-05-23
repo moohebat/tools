@@ -1,22 +1,30 @@
 #!/bin/sh
 
+DATE=$(date +"%Y%m%d%H%M")
+
 OUTPUT=output
 #OUTPUT=/srv/ftp/search-console
 
-DATE=$(date +"%Y%m%d%H%M")
-
-#CW=$(date --date="1 days ago" +"%V")
-CW=$(date -v-1d +"%V")
-
 mkdir $OUTPUT/$DATE
 
-for i in $CW 
+# MacOSX format
+CW=$(date --date="1 days ago" +"%V")
+# Linux format
+#CW=$(date -v-1d +"%V")
+
+for query in $(ls input)
 do
 
-  for query in $(ls input)
+  for cc in MY ID HK PH SG TH VN
   do
-    python google-analytics.py ALL $i input/$query > $OUTPUT/$DATE/${query%.*}-$i.csv
+    for i in $CW 
+    do
+      python google-analytics.py $cc 2016-$i input/$query > $OUTPUT/$DATE/${query%.*}-$cc-$i.csv 2>> $OUTPUT/$DATE/errors.log
+    done
+
+    cat $OUTPUT/$DATE/${query%.*}-$cc-*.csv > $OUTPUT/$DATE/${query%.*}-$cc.csv
   done
 
-done
+  cat $OUTPUT/$DATE/${query%.*}-*-*.csv > $OUTPUT/$DATE/${query%.*}.csv
 
+done

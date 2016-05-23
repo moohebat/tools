@@ -17,18 +17,18 @@ GSC_IDS = { 'SG':'iprice.sg', 'MY':'iprice.my', 'ID':'iprice.co.id', 'PH':'ipric
 
 argparser = argparse.ArgumentParser(add_help=False)
 argparser.add_argument('cc', type=str, help=('Country code).'))
-argparser.add_argument('week', type=int, help=('Week number).'))
+argparser.add_argument('week', type=str, help=('Week number).'))
 argparser.add_argument('pages', type=int, help=('Top N pages).'))
 
-YEAR, PAGE_SIZE = 2016, 5000
+PAGE_SIZE = 5000
 
 def get_top_landing_pages(service, cc, week, n):
   data = service.data().ga().get(
     ids='ga:' + GA_IDS[cc],
     start_index='1',
     max_results=n,
-    start_date=get_date(YEAR, week)[0],
-    end_date=get_date(YEAR, week)[1],
+    start_date=get_date(week)[0],
+    end_date=get_date(week)[1],
     sort='-ga:sessions',
     dimensions='ga:landingPagePath',
     metrics='ga:sessions',
@@ -65,10 +65,11 @@ def get_keyword_data(service, cc, week, url, protocol):
 
   return []
 
-def get_date(year, week):
-    d = date(year,1,1)
+def get_date(week):
+    year, week = week.split("-")
+    d = date(int(year),1,1)
     d = d - timedelta(d.weekday())
-    dlt = timedelta(days = week*7)
+    dlt = timedelta(days = int(week)*7)
     return (d + dlt).isoformat(),  (d + dlt + timedelta(days=6)).isoformat()
 
 def initialize_service(argv, id):
