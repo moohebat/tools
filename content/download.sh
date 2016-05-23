@@ -17,7 +17,8 @@ do
 
 	python content.py input/$CC.json > $OUTPUT/$DATE/content-$CC.csv 2>> $OUTPUT/$DATE/error.log
 
+	head -q -n1 $OUTPUT/$DATE/content-$cc.csv > $OUTPUT/$DATE/content.csv
 done
 
-cat $OUTPUT/$DATE/content-*.csv > $OUTPUT/$DATE/content.csv
+tail -q -n+2 $OUTPUT/$DATE/content-*.csv >> $OUTPUT/$DATE/content.csv
 

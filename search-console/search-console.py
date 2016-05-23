@@ -85,7 +85,7 @@ def output(url, traffic, data):
 def main(argv):
   args = argparser.parse_args()
 
-  print >> sys.stderr, '# Start: Keyword Data: %s, %s, %s' % (args.cc, args.week, datetime.datetime.now().time().isoformat())
+  print >> sys.stderr, '# Start: Keyword Data: %s, %s, %s, %s' % (args.cc, args.week, args.pages, datetime.datetime.now().time().isoformat())
 
   ga, gsc = initialize_service(argv, "analytics"), initialize_service(argv, "webmasters")
 
@@ -108,7 +108,7 @@ def main(argv):
     bar.next()
   bar.finish()
     
-  print >> sys.stderr, '# End: Keyword Data: %s, %s, %s' % (args.cc, args.week, datetime.datetime.now().time().isoformat())
+  print >> sys.stderr, '# End: Keyword Data: %s, %s, %s, %s' % (args.cc, args.week, args.pages, datetime.datetime.now().time().isoformat())
 
 if __name__ == '__main__':
     main(sys.argv)

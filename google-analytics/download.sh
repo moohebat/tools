@@ -2,15 +2,15 @@
 
 DATE=$(date +"%Y%m%d%H%M")
 
-OUTPUT=output
-#OUTPUT=/srv/ftp/search-console
+#OUTPUT=output
+OUTPUT=/srv/ftp/google-analytics
 
 mkdir $OUTPUT/$DATE
 
 # MacOSX format
-CW=$(date --date="1 days ago" +"%V")
-# Linux format
 #CW=$(date -v-1d +"%V")
+# Linux format
+CW=$(date --date="1 days ago" +"%V")
 
 for query in $(ls input)
 do
@@ -20,11 +20,15 @@ do
     for i in $CW 
     do
       python google-analytics.py $cc 2016-$i input/$query > $OUTPUT/$DATE/${query%.*}-$cc-$i.csv 2>> $OUTPUT/$DATE/errors.log
+
+      head -q -n1 $OUTPUT/$DATE/${query%.*}-$cc-$i.csv > $OUTPUT/$DATE/${query%.*}-$cc.csv
     done
 
-    cat $OUTPUT/$DATE/${query%.*}-$cc-*.csv > $OUTPUT/$DATE/${query%.*}-$cc.csv
+    tail -q -n+2 $OUTPUT/$DATE/${query%.*}-$cc-*.csv >> $OUTPUT/$DATE/${query%.*}-$cc.csv
+
+    head -q -n1 $OUTPUT/$DATE/${query%.*}-$cc.csv > $OUTPUT/$DATE/${query%.*}.csv
   done
 
-  cat $OUTPUT/$DATE/${query%.*}-*-*.csv > $OUTPUT/$DATE/${query%.*}.csv
+  tail -q -n+2 $OUTPUT/$DATE/${query%.*}-*-*.csv >> $OUTPUT/$DATE/${query%.*}.csv
 
 done

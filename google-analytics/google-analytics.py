@@ -162,7 +162,7 @@ def initialize_service(argv, id):
 def main(argv):
   args = argparser.parse_args()
 
-  print >> sys.stderr, '# Start: Google Analytics: %s, %s, %s' % (args.cc, args.week, datetime.now().time().isoformat())
+  print >> sys.stderr, '# Start: Google Analytics: %s, %s, %s, %s' % (args.cc, args.week, args.query, datetime.now().time().isoformat())
 
   ga = initialize_service(argv, "analytics")
   
@@ -184,7 +184,7 @@ def main(argv):
   df = process(args.cc, website, df)
   df.to_csv(sys.stdout, header=True, index=False)
 
-  print >> sys.stderr, '# End: Keyword Data: %s, %s, %s' % (args.cc, args.week, datetime.now().time().isoformat())
+  print >> sys.stderr, '# End: Keyword Data: %s, %s, %s, %s' % (args.cc, args.week, args.query, datetime.now().time().isoformat())
 
 if __name__ == '__main__':
     main(sys.argv)

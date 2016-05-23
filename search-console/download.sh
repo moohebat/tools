@@ -2,13 +2,13 @@
 
 DATE=$(date +"%Y%m%d%H%M")
 
-OUTPUT=output
-#OUTPUT=/srv/ftp/search-console
+#OUTPUT=output
+OUTPUT=/srv/ftp/search-console
 
 # Mac OSX format
-CW=$(date -v-3d)
+#CW=$(date -v-3d)
 # Linux format
-#CW=$(date --date="3 days ago" +"%V")
+CW=$(date --date="3 days ago" +"%V")
 
 mkdir $OUTPUT/$DATE
 
@@ -17,12 +17,15 @@ do
 
   for i in $CW 
   do
-    python search-console.py $cc 2016-$i 10000 > /srv/ftp/search-console/$DATE/10k-$cc-$i.csv 2>> $OUTPUT/$DATE/error.log
+    python search-console.py $cc 2016-$i 10 > /srv/ftp/search-console/$DATE/10k-$cc-$i.csv 2>> $OUTPUT/$DATE/error.log
+
+    head -q -n1 $OUTPUT/$DATE/10k-$cc-$i.csv > $OUTPUT/$DATE/10k-$cc.csv
   done
   
-  cat $OUTPUT/$DATE/10k-$cc-*.csv > $OUTPUT/$DATE/10k-$cc.csv
+  tail -q -n+2 $OUTPUT/$DATE/10k-$cc-*.csv >> $OUTPUT/$DATE/10k-$cc.csv
 
+  head -q -n1 $OUTPUT/$DATE/10k-$cc.csv > $OUTPUT/$DATE/10k.csv
 done
 
-cat $OUTPUT/$DATE/10k-*-*.csv > $OUTPUT/$DATE/10k.csv
+tail -q -n+2 $OUTPUT/$DATE/10k-*-*.csv >> $OUTPUT/$DATE/10k.csv
 
