@@ -42,8 +42,8 @@ def get_keyword_data(service, cc, week, url, protocol):
       tmp = service.searchanalytics().query(
         siteUrl = protocol + "://" + GSC_IDS[cc] + "/",
         body = {
-          'startDate' : get_date(YEAR, week)[0],
-          'endDate' : get_date(YEAR, week)[1],
+          'startDate' : get_date(week)[0],
+          'endDate' : get_date(week)[1],
           'dimensions' : ['query', 'date'],
           'dimensionFilterGroups': [{
             'filters' : [{
@@ -59,9 +59,9 @@ def get_keyword_data(service, cc, week, url, protocol):
       if 'rows' in tmp:
         return tmp['rows']
 
-    except Exception:
+    except Exception, e:
       retry = retry - 1
-      print >> sys.stderr, 'Failed downloading: %s' % (url)
+      print >> sys.stderr, 'Failed downloading: %s (%s)' % (url, e)
 
   return []
 
