@@ -205,19 +205,18 @@ def main(argv):
   output = pandas.DataFrame()
   for website in GA_IDS[args.cc]:
   
-    # Quirk: Our CGs in SG are offset one from the rest
-    newQuery = query.copy()
-    if args.cc == "SG" and website == "IPRICE":
-      for cg in reversed(re.compile('(ga:contentGroup([0-9]{1,2}))').findall(newQuery['dimensions'])):
-        newQuery['dimensions'] = newQuery['dimensions'].replace(cg[0], 'ga:contentGroup' + str(int(cg[1]) + 1))
-    
+    newQuery = query.copy()    
     # Quirk: Merchant code was only introduced in CW13 and does not exist for CooD yet
     cd6 = re.compile('(,ga:dimension6)').findall(newQuery['dimensions'])
     if len(cd6) > 0 and (int(args.week.split("-")[1]) < 13 or website != "IPRICE"):
       newQuery['dimensions'] = newQuery['dimensions'].replace(cd6[0], '')
 
     newHeaders = newQuery['dimensions'].split(",") + newQuery['metrics'].split(",")  
-
+    # Quirk: Our CGs in SG are offset one from the rest
+    if args.cc == "SG" and website == "IPRICE":
+      for cg in reversed(re.compile('(ga:contentGroup([0-9]{1,2}))').findall(newQuery['dimensions'])):
+        newQuery['dimensions'] = newQuery['dimensions'].replace(cg[0], 'ga:contentGroup' + str(int(cg[1]) + 1))
+    
     data = call(ga, args.cc, website, args.week, newQuery)
 
     if len(data) == 0:
