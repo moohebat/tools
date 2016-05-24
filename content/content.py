@@ -66,7 +66,17 @@ def has_heading(string):
 
 def has_meta(string):
 	return len(string) > 0
-	
+
+def has_logo(string):
+	return len(string) > 0
+
+def int_url_count(array):
+	count = 0
+	for item in array:
+		if len(item) > 0:
+			count = count + 1
+	return count
+			
 # HTML Rules
 def single_item_list(dom):
 	elements = dom.cssselect("ul, ol")
@@ -108,6 +118,15 @@ def table_width_height(dom):
 	broken = 0
 	for e in elements:
 		if (e.attrib and "style" in e.attrib) and ("width" in e.attrib['style'] or "height" in e.attrib['style']):
+			broken = broken + 1
+	return broken
+
+def image_in_table(dom):
+	tables = dom.cssselect("table")
+	broken = 0
+	for t in tables:
+		images = t.cssselect("img")
+		for i in images:
 			broken = broken + 1
 	return broken
 
@@ -168,10 +187,22 @@ def calculate_stats(data):
 		domLeftText = html.fragment_fromstring(leftText, create_parent="div")
 		domBottomText = html.fragment_fromstring(bottomText, create_parent="div")
 		
+		stat['Category_Overview'] = str(get_field('categoryOverview', row))
+		stat['International_URLs'] = int_url_count([
+			get_field('internationalUrl.HK', row),
+			get_field('internationalUrl.ID', row),
+			get_field('internationalUrl.MY', row),
+			get_field('internationalUrl.PH', row),
+			get_field('internationalUrl.SG', row),
+			get_field('internationalUrl.TH', row),
+			get_field('internationalUrl.VN', row)
+		])
+		
+		stat['Has_Logo'] = str(has_logo(get_field('image', row)))
 		stat['Has_Title'] = str(has_title(get_field('title', row)))
 		stat['Has_Meta'] = str(has_meta(get_field('meta', row)))
 		stat['Has_Heading'] = str(has_heading(get_field('heading', row)))
-
+		
 		stat['Top_Characters'] = character_count(topText)
 		stat['Left_Character'] = character_count(leftText)
 		stat['Bottom_Characters'] = character_count(bottomText)
@@ -205,6 +236,7 @@ def calculate_stats(data):
 		stat['Empty_Paragraph'] = empty_paragraph(domBottomText)
 		stat['Missing_Table_Header'] = missing_table_header(domBottomText)
 		stat['Table_Width_Height'] = table_width_height(domBottomText)
+		stat['Image_In_Table'] = image_in_table(domBottomText)
 		stat['Image_Not_CDN'] = image_not_cdn(domBottomText)
 		stat['Spaces_At_End'] = spaces_at_end(bottomText)
 		stat['Double_Spaces'] = spaces_at_end(bottomText)
