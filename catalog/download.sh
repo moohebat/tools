@@ -3,14 +3,14 @@
 DATE=$(date +"%Y%m%d%H%M")
 
 #OUTPUT=output
-OUTPUT=/srv/ftp/content
+OUTPUT=/srv/ftp/catalog
 
 mkdir $OUTPUT/$DATE
 
 for CC in id hk my ph sg th vn
 do
 
-	python catalog.py input/$CC.json > $OUTPUT/$DATE/catalog-$CC.csv 2>> $OUTPUT/$DATE/error.log
+	python catalog.py $CC > $OUTPUT/$DATE/catalog-$CC.csv 2>> $OUTPUT/$DATE/error.log
 
 	head -q -n1 $OUTPUT/$DATE/catalog-$CC.csv > $OUTPUT/$DATE/catalog.csv
 done

@@ -2,7 +2,7 @@
 # pip install elasticsearch
 # pip install elasticsearch-dsl
 
-import argparse, datetime, urllib, socket, sys, pandas, elasticsearch, urllib3
+import argparse, datetime, urllib, socket, sys, pandas, elasticsearch, urllib3, time
 
 reload(sys)
 sys.setdefaultencoding("UTF-8")
@@ -70,6 +70,9 @@ def get_data(cc, query, thing):
       return res['aggregations']
     except elasticsearch.exceptions.AuthorizationException:
       retry = retry -1
+    except elasticsearch.exceptions.ConnectionTimeout:
+      retry = retry -1
+      time.sleep(10)
   
   print >> sys.stderr, "ERROR: Couldn't download data for %s" % (thing)
   return None
