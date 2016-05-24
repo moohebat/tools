@@ -108,7 +108,9 @@ def is_active(timestamp):
 	seconds = int(timestamp) / 1000
 	expires = datetime.datetime.fromtimestamp(seconds)
 	now = datetime.datetime.now()
-	if now < expires:
+	if seconds <= 0:
+		return "ALWAYS"
+	elif now < expires:
 		return True
 	else:
 		return False
