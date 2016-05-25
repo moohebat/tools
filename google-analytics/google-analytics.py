@@ -231,7 +231,7 @@ def main(argv):
     
     output = pandas.concat([output, df])
 
-  output.to_csv(sys.stdout, header=True, index=False)
+  output.to_csv(sys.stdout, header=True, index=False, columns=headers)
 
   print >> sys.stderr, '# End: Keyword Data: %s, %s, %s, %s' % (args.cc, args.week, args.query, datetime.now().time().isoformat())
 
