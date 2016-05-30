@@ -27,7 +27,7 @@ function search() {
 
 	var query = {
 		"query" : {
-			"term" : {
+			"match_phrase" : {
 				"masterbrain" : term
 			}
 		}, 
