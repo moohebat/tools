@@ -1,8 +1,6 @@
-
-# REQUIREMENTS
+# DEPENDENCIES
 # $ sudo pip install requests
 # $ sudo pip install python-firebase
-# $ sudo pip 
 # $ sudo pip install google-api-python-client
 
 from googleapiclient.discovery import build
@@ -12,14 +10,14 @@ from datetime import datetime, timedelta
 from pytz import timezone
 from firebase import firebase
 
-import httplib2, json
+import calendar, httplib2, json
 
 service_account_email = 'chrome-extension@molten-nirvana-810.iam.gserviceaccount.com'
 key_file_location = 'ga.p12'
 scope = 'https://www.googleapis.com/auth/analytics.readonly'
 discovery = 'https://analyticsreporting.googleapis.com/$discovery/rest'
 
-GOAL = 1100000 # one million
+GOAL = 1338666 # one million
 
 FIREBASE = 'https://vivid-inferno-7935.firebaseIO.com'
 
@@ -41,13 +39,22 @@ def get_sessions(service):
   weekday = datetime.now(timezone('Asia/Kuala_Lumpur')).weekday()
 
   start_current_month = datetime(year, month, 1)
-  end_current_month = datetime(year, month, day) - timedelta(days=1)
+  if day == 1:
+    end_current_month = start_current_month
+  else:
+    end_current_month = datetime(year, month, day) - timedelta(days=1)
 
+  if weekday == 0:
+    weekday = 7
   start_current_week = datetime(year, month, day) - timedelta(days=weekday)
   end_current_week = datetime(year, month, day) - timedelta(days=1)
 
   start_last_month = datetime(year, month - 1, 1)
-  end_last_month = datetime(year, month - 1, day) - timedelta(days=1)
+  last_day_month = calendar.monthrange(year, month - 1)[1]
+  if day > last_day_month:
+    end_last_month = datetime(year, month - 1, last_day_month)
+  else:
+    end_last_month = datetime(year, month - 1, day) - timedelta(days=1)
 
   start_last_week = start_current_week - timedelta(days=7)
   end_last_week = end_current_week - timedelta(days=7)
