@@ -172,6 +172,8 @@ def process(cc, website, df):
   if 'ga:dimension6' in df:
     df['ipg:merchantName'] = df.apply(lambda x: parse_merchant(x['ga:dimension6'])[0], axis=1)
     df['ipg:merchantCode'] = df.apply(lambda x: parse_merchant(x['ga:dimension6'])[1], axis=1)
+  if 'ga:eventLabel' in df:
+    df['ipg:merchantName'] = df.apply(lambda x: parse_merchant(x['ga:eventLabel'])[0], axis=1)
     
   return df
 
