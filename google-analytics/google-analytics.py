@@ -207,11 +207,16 @@ def main(argv):
   output = pandas.DataFrame()
   for website in GA_IDS[args.cc]:
   
-    newQuery = query.copy()    
+    newQuery = query.copy()
+    
     # Quirk: Merchant code was only introduced in CW13 and does not exist for CooD yet
     cd6 = re.compile('(,ga:dimension6)').findall(newQuery['dimensions'])
     if len(cd6) > 0 and (int(args.week.split("-")[1]) < 13 or website != "IPRICE"):
       newQuery['dimensions'] = newQuery['dimensions'].replace(cd6[0], '')
+
+    # Quirk: If dimension6 is set, eventLabel can be skipped, it contains a subset of the data, saves one dimension
+    if "ga:dimension6" in newQuery['dimensions'] and 'ga:eventLabel' in newQuery['dimensions']:
+      newQuery['dimensions'] = newQuery['dimensions'].replace(',ga:eventLabel', '')
 
     newHeaders = newQuery['dimensions'].split(",") + newQuery['metrics'].split(",")  
     # Quirk: Our CGs in SG are offset one from the rest
