@@ -150,9 +150,9 @@ def parse_product(value1, value2, website):
     subproduct = value1
 
   if product == 'n/a' and value1 != '(not set)' and value1 != '':
-    print>> sys.stderr, "Warning: Can't parse product '%s'" % value
+    print>> sys.stderr, "Warning: Can't parse product '%s'" % value1
   if subproduct == 'n/a' and value2 != '(not set)' and value2 != '':
-    print>> sys.stderr, "Warning: Can't parse subproduct '%s'" % value
+    print>> sys.stderr, "Warning: Can't parse subproduct '%s'" % value2
     
   return (product, subproduct)
 
