@@ -2,6 +2,7 @@
 # $ sudo pip install requests
 # $ sudo pip install python-firebase
 # $ sudo pip install google-api-python-client
+# $ sudo pip install pytz
 
 from googleapiclient.discovery import build
 from oauth2client.service_account import ServiceAccountCredentials
