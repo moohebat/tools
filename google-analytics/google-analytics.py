@@ -150,9 +150,9 @@ def parse_product(value1, value2, website):
     subproduct = value1
 
   if product == 'n/a' and value1 != '(not set)' and value1 != '':
-    print>> sys.stderr, "Warning: Can't parse product '%s'" % value
+    print>> sys.stderr, "Warning: Can't parse product '%s'" % value1
   if subproduct == 'n/a' and value2 != '(not set)' and value2 != '':
-    print>> sys.stderr, "Warning: Can't parse subproduct '%s'" % value
+    print>> sys.stderr, "Warning: Can't parse subproduct '%s'" % value2
     
   return (product, subproduct)
 
@@ -172,6 +172,8 @@ def process(cc, website, df):
   if 'ga:dimension6' in df:
     df['ipg:merchantName'] = df.apply(lambda x: parse_merchant(x['ga:dimension6'])[0], axis=1)
     df['ipg:merchantCode'] = df.apply(lambda x: parse_merchant(x['ga:dimension6'])[1], axis=1)
+  if 'ga:eventLabel' in df:
+    df['ipg:merchantName'] = df.apply(lambda x: parse_merchant(x['ga:eventLabel'])[0], axis=1)
     
   return df
 
@@ -205,11 +207,16 @@ def main(argv):
   output = pandas.DataFrame()
   for website in GA_IDS[args.cc]:
   
-    newQuery = query.copy()    
+    newQuery = query.copy()
+    
     # Quirk: Merchant code was only introduced in CW13 and does not exist for CooD yet
     cd6 = re.compile('(,ga:dimension6)').findall(newQuery['dimensions'])
-    if len(cd6) > 0 and (int(args.week.split("-")[1]) < 13 or website != "IPRICE"):
+    if len(cd6) > 0 and ((int(args.week.split("-")[0]) == 2015 or int(args.week.split("-")[1])) < 13 or website != "IPRICE"):
       newQuery['dimensions'] = newQuery['dimensions'].replace(cd6[0], '')
+
+    # Quirk: If dimension6 is set, eventLabel can be skipped, it contains a subset of the data, saves one dimension
+    if "ga:dimension6" in newQuery['dimensions'] and 'ga:eventLabel' in newQuery['dimensions']:
+      newQuery['dimensions'] = newQuery['dimensions'].replace(',ga:eventLabel', '')
 
     newHeaders = newQuery['dimensions'].split(",") + newQuery['metrics'].split(",")  
     # Quirk: Our CGs in SG are offset one from the rest

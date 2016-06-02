@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 DATE=$(date +"%Y%m%d%H%M")
 
@@ -17,7 +17,8 @@ do
 
   for cc in MY ID HK PH SG TH VN
   do
-    for i in $CW 
+    #for i in $CW
+    for i in $(seq 1 $CW) 
     do
       python google-analytics.py $cc 2016-$i input/$query > $OUTPUT/$DATE/${query%.*}-$cc-$i.csv 2>> $OUTPUT/$DATE/errors.log
 
