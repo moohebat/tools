@@ -2,6 +2,7 @@
 # $ sudo pip install requests
 # $ sudo pip install python-firebase
 # $ sudo pip install google-api-python-client
+# $ sudo pip install pytz
 
 from googleapiclient.discovery import build
 from oauth2client.service_account import ServiceAccountCredentials
@@ -17,7 +18,7 @@ key_file_location = 'ga.p12'
 scope = 'https://www.googleapis.com/auth/analytics.readonly'
 discovery = 'https://analyticsreporting.googleapis.com/$discovery/rest'
 
-GOAL = 1338666 # one million
+GOAL = 1572870 # one million
 
 FIREBASE = 'https://vivid-inferno-7935.firebaseIO.com'
 
