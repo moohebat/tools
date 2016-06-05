@@ -1,6 +1,6 @@
 #!/bin/sh
 
-OUTPUT=~/Downloads/test.csv
+OUTPUT=~/Downloads/testx.csv
 rm -f $OUTPUT
 
 for i in {1..12}

@@ -11,6 +11,68 @@ def detect_datetime(timestamp):
         str(dt.year) + "-" + str(dt.isocalendar()[1]),
         dt.time().isoformat())
 
+def detect_cc_refer(refer):
+    if pandas.notnull(refer):
+        refer = refer.lower()
+        if "iprice.hk" in refer:
+            return "HK"
+        elif "iprice.co.id" in refer:
+            return "ID"
+        if "iprice.my" in refer:
+            return "MY"
+        elif "iprice.ph" in refer:
+            return "PH"
+        elif "iprice.sg" in refer:
+            return "SG"
+        elif "ipricethailand.com" in refer:
+            return "TH"
+        elif "iprice.vn" in refer:
+            return "VN"
+        elif "says.com" in refer:
+            return "MY"
+        elif "juiceonline.com" in refer:
+            return "MY"
+        elif "rappler.com" in refer:
+            return "PH"
+            
+    return pandas.np.nan
+
+def detect_cc_affid(affid):
+    if pandas.notnull(affid):
+        affid = affid.lower()
+        if affid in ['id', 'hk', 'my', 'ph', 'sg', 'th', 'vn']:
+            return affid.upper()
+    
+    return pandas.np.nan     
+
+def detect_cc_name(value):
+    value = value.lower()
+    words = re.compile('[^\w ]+').sub('', value).split(" ")
+    for w in words:
+        if w in ['id', 'hk', 'my', 'ph', 'sg', 'th', 'vn']:
+            return w.upper()
+
+    if 'indonesia' in value:
+        return 'ID'
+    elif 'hong kong' in value:
+        return 'HK'
+    elif 'hongkong' in value:
+        return 'HK'
+    elif 'malaysia' in value:
+        return 'MY'
+    elif 'philippines' in value:
+        return 'PH'
+    elif 'singapore' in value:
+        return 'SG'
+    elif 'thailand' in value:
+        return 'TH'
+    elif 'vietnam' in value:
+        return 'VN'
+    elif 'viet nam' in value:
+        return 'VN'
+        
+    return pandas.np.nan
+
 PARTNERS = {
     'MP1000': 'SAYS',
     'MP0001': 'SAYS', # backwards compatibility
@@ -19,7 +81,6 @@ PARTNERS = {
     'MP1003': 'RAPPLER',
     'MP1004': 'OHBULAN'
 }
-
 def detect_site(source):
   # TODO (-1): take aff_sub fields into account
   if pandas.notnull(source):
@@ -45,7 +106,6 @@ def detect_channel(source):
     return pandas.np.nan
 
 def detect_product(source, sessionId):
-    # TODO (-1): we could add offer name here for improving historic accuracy
     # TODO (-1): take aff_sub fields into account
  
     if pandas.notnull(source):

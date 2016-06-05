@@ -13,6 +13,7 @@ COUNTRIES = {
     1641: 'MY',
     1621: 'MY', # old MY
     1642: 'ID',
+    1624: 'ID', # quirk ID
     1643: 'VN',
     1644: 'PH',
     1645: 'HK',
@@ -48,8 +49,18 @@ def request(url, username, password, sdate, edate):
     
     return output
 
-def detect_cc(site_id):
-    # TODO (-1): improve by using OriginalUrl
+def detect_cc(refer, program, site_id):
+    # refer URL is always true
+    cc = parse.detect_cc_refer(refer)
+    if pandas.notnull(cc):
+        return cc
+
+    # use merchant and product
+    cc = parse.detect_cc_name(program)
+    if pandas.notnull(cc):
+        return cc
+        
+    # otherwise use site id
     if pandas.notnull(site_id):
         if site_id in COUNTRIES:
             return COUNTRIES[site_id]
@@ -80,7 +91,7 @@ def get_transactions(url, username, password, sdate, edate, affiliate):
         data['ipg:affiliate'] = affiliate
         data['ipg:merchantId'] = data.apply(lambda x: affiliate + str(x['ag:MerchantId']), axis=1)
         
-        data['ipg:cc'] = data.apply(lambda x: detect_cc(x['ag:AffiliateSiteId']), axis=1)
+        data['ipg:cc'] = data.apply(lambda x: detect_cc(x['ag:OriginURL'], x['ag:ProgramName'], x['ag:AffiliateSiteId']), axis=1)
         data['ipg:merchantName'] = data['ag:MerchantName']
         
         data['ipg:timestamp'] = data.apply(lambda x: parse.parse_datetime(x['ag:TransactionDateTime'], "%d/%m/%Y %H:%M:%S"), axis=1)

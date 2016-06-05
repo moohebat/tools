@@ -29,6 +29,7 @@ def get_conversions(url, key, network, sdate, edate, currency=None):
         'Stat.advertiser_info', # ad_sub1 query parameter
         'Stat.datetime',
         'Stat.conversion_status',
+        'Stat.refer', # referer URL
         'Stat.sale_amount', 
         'Stat.ad_id', # transaction ID for the cookie
         'Stat.id', # unique ID for the conversion
@@ -108,8 +109,9 @@ def request(url, key, network, params, sdate, edate, currency):
     
     
 def parse_cpc(data):
+  # TODO (1): implement properly
   if len(data) > 0:
-    data['ipg:cc'] = data.apply(lambda x: detect_cc(x['ho:Stat.affiliate_info2'], x['ho:Offer.name'], x['ho:Country.name']), axis=1)
+    data['ipg:cc'] = data.apply(lambda x: detect_cc("", x['ho:Stat.affiliate_info2'], x['ho:Offer.name'], x['ho:Country.name']), axis=1)
     data['ipg:merchantName'] = data['ho:Offer.name']
     data['ipg:merchantId'] = pandas.np.nan
     
@@ -131,7 +133,7 @@ def parse_cpc(data):
 
 def parse_cps(data):
   if len(data) > 0:
-    data['ipg:cc'] = data.apply(lambda x: detect_cc(x['ho:Stat.affiliate_info2'], x['ho:Offer.name'], x['ho:Country.name']), axis=1)
+    data['ipg:cc'] = data.apply(lambda x: detect_cc(x['ho:Stat.refer'], x['ho:Offer.name'], x['ho:Country.name'], x['ho:Stat.affiliate_info2']), axis=1)
     data['ipg:merchantName'] = data['ho:Offer.name']
     data['ipg:merchantId'] = pandas.np.nan
     
@@ -153,54 +155,28 @@ def parse_cps(data):
   return data
 
 
-def detect_cc(affsub2, offer, country):
-  # most accurate: detect custom affsub2
-  if affsub2:
-    affsub2 = affsub2.lower()
-    if affsub2 in ['id', 'hk', 'my', 'ph', 'sg', 'th', 'vn']:
-      return affsub2.upper()
-  
-  # backwards compatibiliy, detect from offer name
-  offer = offer.lower()
-  words = re.compile('[^\w ]+').sub('', offer).split(" ")
-  for w in words:
-    if w in ['id', 'hk', 'my', 'ph', 'sg', 'th', 'vn']:
-      return w.upper()
-
-  for w in words:
-    if 'indonesia' in offer:
-        return 'ID'
-    elif 'hong kong' in offer:
-        return 'HK'
-    elif 'malaysia' in offer:
-        return 'MY'
-    elif 'philippines' in offer:
-        return 'PH'
-    elif 'singapore' in offer:
-        return 'SG'
-    elif 'thailand' in offer:
-        return 'TH'
-    elif 'vietnam' in offer:
-        return 'VN'
+def detect_cc(refer, offer, country, affsub2):
+    # refer URL is always true
+    cc = parse.detect_cc_refer(refer)
+    if pandas.notnull(cc):
+        return cc
     
-  # if that isn't set either, take the user's country
-  country = country.lower()
-  if country == 'indonesia':
-    return 'ID'
-  elif country == 'hong kong':
-    return 'HK'
-  elif country == 'malaysia':
-    return 'MY'
-  elif country == 'philippines':
-    return 'PH'
-  elif country == 'singapore':
-    return 'SG'
-  elif country == 'thailand':
-    return 'TH'
-  elif country == 'viet nam':
-    return 'VN'
-  
-  return pandas.np.nan
+    # backwards compatibiliy, detect from offer name
+    cc = parse.detect_cc_name(offer)
+    if pandas.notnull(cc):
+        return cc    
+        
+    # if that isn't set either, take the user's country
+    cc = parse.detect_cc_name(country)
+    if pandas.notnull(cc):
+        return cc    
+      
+    # otherwise use affsub2
+    cc = parse.detect_cc_affid(affsub2)
+    if pandas.notnull(cc):
+        return cc    
+        
+    return pandas.np.nan
 
 OS = {
     'Desktop' : 'desktop',

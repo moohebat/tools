@@ -6,7 +6,7 @@ def detect_zero_commission(order_value, commission):
         return "zero commission"
 
 def detect_test_order(fields):
-    # TODO: implement
+    # TODO (1): implement
     pass
 
 DUPLICATE_ORDERS = {}
@@ -45,4 +45,3 @@ def detect(data):
      if pandas.isnull(x['ipg:suspicious']) else x['ipg:suspicious'], axis=1)
      
     return data
-    

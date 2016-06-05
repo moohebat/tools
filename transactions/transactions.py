@@ -36,10 +36,10 @@ def main(argv):
       if f == "__init__.py" or ".pyc" in f:
         continue
       affiliate = importlib.import_module("affiliates.%s" % f.split(".")[0])
-      data = affiliate.get_transactions(start_date, end_date)
       print >> sys.stderr, "# Progress: Downloading %s" % f
-      if len(data) > 0:
-        data = data.append(data, ignore_index=True)
+      tmp = affiliate.get_transactions(start_date, end_date)
+      if len(tmp) > 0:
+        data = data.append(tmp, ignore_index=True)
   else:
     try:
         affiliate = importlib.import_module("affiliates.%s" % args.affiliate)

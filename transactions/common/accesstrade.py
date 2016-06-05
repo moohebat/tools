@@ -71,9 +71,9 @@ def get_transactions(url, username, password, sitecode, affiliate, sdate, edate)
     if len(data) > 0:
         data['ipg:dealType'] = "CPS"
         
-        data['ipg:affiliate'] = affiliate
+        data['ipg:affiliate'] = "AT" + affiliate
         
-        data['ipg:cc'] = 'TH'
+        data['ipg:cc'] = affiliate
         data['ipg:merchantName'] = data['at:Campaign Name']
         data['ipg:merchantId'] = pandas.np.nan
         
@@ -88,7 +88,7 @@ def get_transactions(url, username, password, sitecode, affiliate, sdate, edate)
         
         data['ipg:device'] = pandas.np.nan
 
-        # TODO: (-1): we need to get this
+        # TODO: (-1): need to get this
         data['ipg:source'] = pandas.np.nan
     
     return data

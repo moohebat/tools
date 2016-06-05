@@ -51,31 +51,26 @@ def download(sdate, edate):
     
     return df
 
-def detect_cc(referrer, uid2):
-    # detect from custom uid2
-    if pandas.notnull(uid2):
-        uid2 = id2.lower()
-        if uid2 in ['id', 'hk', 'my', 'ph', 'sg', 'th', 'vn']:
-            return uid2.upper()
+def detect_cc(refer, merchant, product, uid2):
+    # refer URL is always true
+    cc = parse.detect_cc_refer(refer)
+    if pandas.notnull(cc):
+        return cc
+
+    # use merchant and product
+    cc = parse.detect_cc_name(merchant)
+    if pandas.notnull(cc):
+        return cc    
     
-    # else try with referrer
-    if pandas.notnull(referrer):
-        referrer = referrer.lower()
-        if "iprice.hk" in referrer:
-            return "HK"
-        elif "iprice.co.id" in referrer:
-            return "ID"
-        if "iprice.my" in referrer:
-            return "MY"
-        elif "iprice.ph" in referrer:
-            return "PH"
-        elif "iprice.sg" in referrer:
-            return "SG"
-        elif "ipricethailand.com" in referrer:
-            return "TH"
-        elif "iprice.vn" in referrer:
-            return "VN"
-    
+    cc = parse.detect_cc_name(product)
+    if pandas.notnull(cc):
+        return cc   
+        
+    # otherwise use uid2
+    cc = parse.detect_cc_affid(uid2)
+    if pandas.notnull(cc):
+        return cc    
+
     return pandas.np.nan
 
 def detect_status(status):
@@ -98,7 +93,7 @@ def get_transactions(sdate, edate):
         data['ipg:dealType'] = "CPS"
         data['ipg:affiliate'] = "OMG"
         
-        data['ipg:cc'] = data.apply(lambda x: detect_cc(x['omg:Referrer'], x['omg:UID2']), axis=1)
+        data['ipg:cc'] = data.apply(lambda x: detect_cc(x['omg:Referrer'], x['omg:Merchant'], x['omg:Product'], x['omg:UID2']), axis=1)
         data['ipg:merchantId'] = data.apply(lambda x: "OM" + str(x['omg:MID']), axis=1)
         data['ipg:merchantName'] = data['omg:Merchant']
         

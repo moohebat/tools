@@ -1,0 +1,8 @@
+*.pyc
+*.csv
+*.xlsx
+*.xml
+*.name
+*.pydevproject
+*.project
+*.gitignore
