@@ -149,8 +149,9 @@ def parse_cps(data):
     data['ipg:device'] = data.apply(lambda x: detect_device(x['ho:Browser.display_name'], 
         x['ho:ConversionsMobile.device_brand'], x['ho:ConversionsMobile.device_model'], x['ho:ConversionsMobile.device_os'],
         x['ho:Offer.name']), axis=1)
-    
+
     data['ipg:source'] = data['ho:Stat.source']
+    data['ipg:url'] = data['ho:Stat.refer']
 
   return data
 
@@ -211,7 +212,7 @@ def detect_device(browser, brand, model, os, offer):
             
     # Lazada: "Mobile app", "App"; Zalora: "App"; ShopStylers: "Mobile" / "Mobile app"
     for word in offer.split(" "):  
-        if word in ["app", "mobile"]:
+        if word.lower() in ["app", "mobile"]:
             return "mobile"
 
     return pandas.np.nan

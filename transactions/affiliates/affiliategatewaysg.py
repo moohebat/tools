@@ -5,4 +5,4 @@ USERNAME = 'affiliate@ipricegroup.com'
 PASSWORD = 'ipricerocks2015'
 
 def get_transactions(sdate, edate):
-    return affiliategateway.get_transactions(URL, USERNAME, PASSWORD, sdate, edate, "AGA")
+    return affiliategateway.get_transactions(URL, USERNAME, PASSWORD, sdate, edate, "AGSG")

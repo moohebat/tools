@@ -110,5 +110,6 @@ def get_transactions(sdate, edate):
         data['ipg:device'] = pandas.np.nan
 
         data['ipg:source'] = data['omg:UID']
+        data['ipg:url'] = data['omg:Referrer']
         
     return data

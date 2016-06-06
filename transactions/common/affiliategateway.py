@@ -87,17 +87,18 @@ def get_transactions(url, username, password, sdate, edate, affiliate):
     
     if len(data) > 0:
         data['ipg:dealType'] = "CPS"
-        
         data['ipg:affiliate'] = affiliate
-        data['ipg:merchantId'] = data.apply(lambda x: affiliate + str(x['ag:MerchantId']), axis=1)
         
         data['ipg:cc'] = data.apply(lambda x: detect_cc(x['ag:OriginURL'], x['ag:ProgramName'], x['ag:AffiliateSiteId']), axis=1)
         data['ipg:merchantName'] = data['ag:MerchantName']
+        data['ipg:merchantId'] = data.apply(lambda x: affiliate + str(x['ag:MerchantId']), axis=1)
         
         data['ipg:timestamp'] = data.apply(lambda x: parse.parse_datetime(x['ag:TransactionDateTime'], "%d/%m/%Y %H:%M:%S"), axis=1)
-
-        data['ipg:sessionId'] = data['ag:TransactionId']
-        data['ipg:orderId'] = pandas.np.nan
+        data['ipg:sessionId'] = data.apply(lambda x: parse.generate_id([
+            x['ag:AffiliateSubId'], x['ag:ClickDateTime'], x['ag:CreativeId'], x['ag:OriginURL']
+        ]), axis=1)
+        
+        data['ipg:orderId'] = data['ag:TransactionId']
         data['ipg:currency'] = "USD"
         data['ipg:orderValue'] = data['ag:OrderAmount'] 
         data['ipg:commission'] = data['ag:AffiliateCommissionAmount'] 
@@ -106,5 +107,6 @@ def get_transactions(url, username, password, sdate, edate, affiliate):
         data['ipg:device'] = pandas.np.nan
 
         data['ipg:source'] = data['ag:AffiliateSubId']
+        data['ipg:url'] = data['ag:OriginURL']
     
     return data

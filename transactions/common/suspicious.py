@@ -1,9 +1,13 @@
 import pandas, sys
 
 def detect_zero_commission(order_value, commission):
-    # commission and order value is both zero
+    # commission and order value are both zero
+    # TODO (1): proper handling of n/a values and 0 and strings
+    # TODO (1): proper handling of commission 0 or order value 0
     if pandas.isnull(commission) and pandas.isnull(order_value):
-        return "zero commission"
+        return "zero commission/order value"
+    elif commission == 0 and order_value == 0:
+        return "zero commission/order value"
 
 def detect_test_order(fields):
     # TODO (1): implement
@@ -19,7 +23,7 @@ def detect_duplicate_order(timestamp, order_id, order_value, commission):
     if id in DUPLICATE_ORDERS:
         if not order_id in DUPLICATE_ORDERS[id]:
             DUPLICATE_ORDERS[id].append(order_id)
-            # TODO: if status != 'approved':
+            # TODO (1): if status != 'approved':
             return "duplicate order"
     else:
         DUPLICATE_ORDERS[id] = [order_id]

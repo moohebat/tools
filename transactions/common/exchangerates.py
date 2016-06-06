@@ -37,7 +37,11 @@ class ExchangeRates():
 ER = ExchangeRates()
 
 def convert(value, transaction_date, old_currency, new_currency):
-    if not value or not float(value):
+    try:
+        value = float(value)
+    except ValueError:
+        return pandas.np.nan
+    except TypeError:
         return pandas.np.nan
 
     dateNow = datetime.datetime.now().date()

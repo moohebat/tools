@@ -1,4 +1,4 @@
-import pandas, sys
+import md5, pandas, sys
 
 from common import browser, parse
 from datetime import timedelta
@@ -28,7 +28,7 @@ def download(sdate, edate):
         + '%7B%22filters%22%3A%5B%5D%2C%22columnSorts%22%3A%5B%5D%2C%22reportGroupId%22%3A%22transaction%22%2C%22reportId%22%3A%22commissionDetail%22%2C%22reportName%22%3A%22Commission%20Detail%22%2C%22' \
         + 'startDate%22%3A%22' + (sdate - timedelta(days=1)).strftime('%Y-%m-%d') + 'T16%3A00%3A00.000Z%22%2C%22' \
         + 'endDate%22%3A%22' + (edate - timedelta(days=1)).strftime('%Y-%m-%d') + 'T16%3A00%3A00.000Z%22%2C%22' \
-        + 'presetPeriod%22%3A%22%22%2C%22reportDateType%22%3A%22postingDate%22%7D'
+        + 'presetPeriod%22%3A%22%22%2C%22reportDateType%22%3A%22eventDate%22%7D'
     
     with browser.wait_for_page_load(driver):
         driver.get(transaction_url)
@@ -64,6 +64,24 @@ def detect_cc(refer, advertiser, site):
 
     return pandas.np.nan
 
+def detect_status(status, value):
+    if pandas.notnull(status):
+        status = status.lower()
+        
+        if value < 0:
+            return "rejected"
+        
+        if status == "new":
+            return "pending"
+        elif status == "extended":
+            return "pending"
+        elif status == "locked":
+            return "approved"
+        elif status == "closed":
+            return "approved"
+        
+    return pandas.np.nan
+
 OS = {
     'Windows' : 'desktop',
     'Windows XP' : 'desktop',
@@ -89,7 +107,7 @@ OS = {
     'BlackBerryOS' : 'mobile'
 }
 def detect_device(os):
-    if os:
+    if pandas.notnull(os):
         if os in OS:
             return OS[os]
         elif pandas.notnull(os) and os != "Unknown":
@@ -101,26 +119,21 @@ def convert_transactions(data):
     # first sort by orderId (so we can iterate) and orderValue (so that the actual value is first)
     data.sort_values(["ipg:orderId", "ipg:orderValue"], ascending=False, inplace=True)
     
-    firstItem = None
+    orderIndex = None
     count = 0
     for index, row in data.iterrows():
-        if not isinstance(firstItem, type(None)) and row['ipg:orderId'] == firstItem['ipg:orderId']:
+        if orderIndex and data.loc[index]['ipg:orderId'] == data.loc[orderIndex]['ipg:orderId']:
             count = count + 1
-            if row['ipg:orderValue'] < 0:
+            if data.loc[index]['ipg:orderValue'] < 0:
                 # substract amount from first basket
-                firstItem['ipg:orderValue'] += row['ipg:orderValue']
-                firstItem['ipg:commission'] += row['ipg:commission']
+                data.set_value(orderIndex, 'ipg:orderValue', data.loc[orderIndex]['ipg:orderValue'] + data.loc[index]['ipg:orderValue'])
+                data.set_value(orderIndex, 'ipg:commission', data.loc[orderIndex]['ipg:commission'] + data.loc[index]['ipg:commission'])
                 
-                # separate out into a second item 
-                row['ipg:orderValue'] = (-1 * row['ipg:orderValue'])
-                row['ipg:commission'] = (-1 * row['ipg:commission'])
-
-                # remove firstItem if complete basket was rejected
-                if firstItem['ipg:orderValue'] == 0:
-                    data.drop(firstItem, inplace=True)
-                    print >> sys.stderr, "Removing item: %s" % (row['ipg:orderId'])
+                # make these positive values 
+                data.set_value(index, 'ipg:orderValue', -1 * data.loc[index]['ipg:orderValue'])
+                data.set_value(index, 'ipg:commission', -1 * data.loc[index]['ipg:commission'])
         else:
-            firstItem = row
+            orderIndex = index
             count = 0
         
     return data
@@ -128,32 +141,32 @@ def convert_transactions(data):
 def get_transactions(sdate, edate):
     #data = download(sdate, edate)
     
-    data = pandas.DataFrame.from_csv("/Users/Heinrich/Downloads/commission_detail_1-jan-2015_-_31-dec-2015_posting_date.csv")
+    data = pandas.read_csv("/Users/Heinrich/Downloads/commission_detail_1-jan-2015_-_31-dec-2015_event_date.csv")
     data = data.rename(columns = lambda x : 'cj:' + x)
     
     if len(data) > 0:
         data['ipg:dealType'] = "CPS"
-        
         data['ipg:affiliate'] = AFFILIATE
-        data['ipg:merchantId'] = data.apply(lambda x: AFFILIATE + str(x['cj:Advertiser CID']), axis=1)
         
         data['ipg:cc'] = data.apply(lambda x: detect_cc(x['cj:Click Referring URL'], x['cj:Advertiser Name'], x['cj:Website Name']), axis=1)
         data['ipg:merchantName'] = data['cj:Advertiser Name']
+        data['ipg:merchantId'] = data.apply(lambda x: AFFILIATE + str(x['cj:Advertiser CID']), axis=1)
         
         data['ipg:timestamp'] = data.apply(lambda x: parse.parse_datetime(x['cj:Event Date'], "%d-%b-%Y %H:%M:%S"), axis=1)
-
-        data['ipg:sessionId'] = data['cj:Transaction ID']
-        data['ipg:orderId'] = data['ipg:cc'] + data.apply(lambda x: filter(str.isdigit, x['cj:Order ID']), axis=1)
+        data['ipg:sessionId'] = data.apply(lambda x: parse.generate_id([
+            x['cj:Click Date'], x['cj:SID'], x['cj:Operating System'], x['cj:Action Name'], x['cj:Website Name'], x['cj:Ad ID'], x['cj:Click Referring URL']
+        ]), axis=1)
+        
+        data['ipg:orderId'] = data['ipg:cc'] + data.apply(lambda x: filter(str.isdigit, x['cj:Order ID']) or x['cj:Order ID'], axis=1)
         data['ipg:currency'] = "USD"
         data['ipg:orderValue'] = data['cj:Sale Amount (USD)'] 
         data['ipg:commission'] = data['cj:Publisher Commission (USD)'] 
-        
-        # TODO (1): adjust
-        data['ipg:status'] = data['cj:Status']
+        data['ipg:status'] = data.apply(lambda x: detect_status(x['cj:Status'], x['ipg:orderValue']), axis=1)
         
         data['ipg:device'] = data.apply(lambda x: detect_device(x['cj:Operating System']), axis=1)
 
         data['ipg:source'] = data['cj:SID']
+        data['ipg:url'] = data['cj:Click Referring URL']
 
     if len(data) > 0:
         data = convert_transactions(data)

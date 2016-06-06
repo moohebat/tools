@@ -1,11 +1,10 @@
 #!/usr/bin/python
 # pip install xlrd
-# TODO: Progress bar per affiliate
 
 import argparse, calendar, datetime, importlib, requests, os, sys, pandas
 from progress.bar import Bar
 
-from common import dates, exchangerates, parse, suspicious
+from common import exchangerates, parse, suspicious
 
 reload(sys)
 sys.setdefaultencoding("UTF-8")
@@ -82,19 +81,17 @@ def main(argv):
     # 6. detect not set fields from source
     data['ipg:site'] = data.apply(lambda x: parse.detect_site(x['ipg:source']), axis=1)
     data['ipg:channel'] = data.apply(lambda x: parse.detect_channel(x['ipg:source']), axis=1)
-    data['ipg:product'] = data.apply(lambda x: parse.detect_product(x['ipg:source'], x['ipg:sessionId']), axis=1)
+    data['ipg:product'] = data.apply(lambda x: parse.detect_product(x['ipg:url'], x['ipg:source']), axis=1)
     
     # 7. weight other nan values
     # TODO (0): do it
 
   # output
-  # TODO (1): remove non IPG stuff
-  for c in data.columns.values:
-    if not c.startswith("ipg:"):
-      data.drop(c, axis=1, inplace=True)
+  #for c in data.columns.values:
+  #  if not c.startswith("ipg:"):
+  #    data.drop(c, axis=1, inplace=True)
   data.to_csv(sys.stdout, index=False, na_rep='nan')
   
-
   print >> sys.stderr, '# End: Transactions: %s, %s, %s' % (args.month, args.affiliate, datetime.datetime.now().time().isoformat())
 
 if __name__ == '__main__':

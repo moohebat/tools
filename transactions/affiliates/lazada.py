@@ -13,6 +13,7 @@ def get_transactions(start_date, end_date):
   if len(data) > 0:
     data['ipg:dealType'] = 'CPS'
     data['ipg:affiliate'] = AFFILIATE
+    
     data['ipg:merchantName'] = MERCHANT_NAME
     data['ipg:merchantId'] = data.apply(lambda x: MERCHANT_ID + x['ipg:cc'], axis=1)
   

@@ -13,6 +13,7 @@ def get_transactions(start_date, end_date):
   if len(data) > 0:
     data['ipg:dealType'] = 'CPS'
     data['ipg:affiliate'] = AFFILIATE
+    
     data['ipg:merchantName'] = MERCHANT_NAME
     data['ipg:merchantId'] = MERCHANT_ID
     

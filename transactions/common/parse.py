@@ -8,7 +8,7 @@ def detect_datetime(timestamp):
     dt = datetime.datetime.fromtimestamp(timestamp)
     return (dt.date().isoformat(),
         str(dt.year) + "-" + str(dt.strftime("%m")),
-        str(dt.year) + "-" + str(dt.isocalendar()[1]),
+        str(dt.isocalendar()[0]) + "-" + str(dt.isocalendar()[1]).zfill(2),
         dt.time().isoformat())
 
 def detect_cc_refer(refer):
@@ -105,8 +105,13 @@ def detect_channel(source):
         
     return pandas.np.nan
 
-def detect_product(source, sessionId):
+def detect_product(url, source):
     # TODO (-1): take aff_sub fields into account
+    if pandas.notnull(url) and "iprice" in url:
+        if "/r/c/" in url or "/coupons/" in url:
+            return "coupon"
+        else:
+            return "shop"
  
     if pandas.notnull(source):
         # media partners are always coupon 
@@ -121,11 +126,7 @@ def detect_product(source, sessionId):
         matches = re.search("(shop|coupon|blog)", source)
         if matches:
             return matches.group(0)
-            
-        # initially we only specific source if it was coupons
-        if sessionId:
-            return "shop"
-            
+
     return pandas.np.nan
     
 def detect_tracking_id(source):
@@ -153,8 +154,13 @@ def detect_merchant(value):
         
     return (value, pandas.np.nan)
 
-
 def detect_orderid(timestamp, session_id):
     # otherwise, ordersare made with the same sessionId within 10 seconds are considered one basket
     timestamp = int(timestamp/10)
-    return "ipg/" + md5.new(str(timestamp) + str(session_id)).hexdigest()
+    return generate_id([timestamp, session_id])
+
+def generate_id(fields):
+    string = "ipg/"
+    for f in fields:
+        string = string + str(f)
+    return md5.new(string).hexdigest()
