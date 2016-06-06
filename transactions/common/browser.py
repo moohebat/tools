@@ -57,8 +57,8 @@ def download(filename):
             print >> sys.stderr, "ERROR: Downloading %s timeout" % filename
             break 
 
-    # TODO (1): remove    
-    print >> sys.stderr, absolute
+    # TODO (-1): For debugging only
+    # print >> sys.stderr, absolute
     if os.path.isfile(absolute):
         if ".xls" in filename:
             df = pandas.read_excel(absolute)

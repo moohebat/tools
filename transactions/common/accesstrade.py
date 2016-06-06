@@ -51,7 +51,7 @@ def request(url, username, password, sitecode, sdate, edate):
     
     return df
 
-def detect_status(status):
+def parse_status(status):
     if pandas.notnull(status):
         status = status.lower()
         
@@ -83,12 +83,12 @@ def get_transactions(url, username, password, sitecode, affiliate, sdate, edate)
         data['ipg:currency'] = "THB"
         data['ipg:orderValue'] = data['at:Total Price'] 
         data['ipg:commission'] = data['at:Reward Amount'] 
-        data['ipg:status'] = data.apply(lambda x: parse.parse_status(data['at:Status']), axis=1)
+        data['ipg:status'] = data.apply(lambda x: parse_status(x['at:Status']), axis=1)
         
         data['ipg:device'] = pandas.np.nan
 
         # TODO (0): at:coupon and at:shop
         data['ipg:source'] = data['at:subid']
-        data['ipg:url'] = pandas.np.nan
+        data['ipg:exitUrl'] = pandas.np.nan
     
     return data

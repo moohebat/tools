@@ -139,10 +139,11 @@ def convert_transactions(data):
     return data
 
 def get_transactions(sdate, edate):
-    #data = download(sdate, edate)
+    data = download(sdate, edate)
     
-    data = pandas.read_csv("/Users/Heinrich/Downloads/commission_detail_1-jan-2015_-_31-dec-2015_event_date.csv")
-    data = data.rename(columns = lambda x : 'cj:' + x)
+    # TODO (-1): For debugging only
+    # data = pandas.read_csv("/var/folders/s4/hyfk_zz57558lvdpghhj_x080000gn/T/tmpyaXQ4m/cj_transaction.csv")
+    # data = data.rename(columns = lambda x : 'cj:' + x)
     
     if len(data) > 0:
         data['ipg:dealType'] = "CPS"
@@ -157,7 +158,7 @@ def get_transactions(sdate, edate):
             x['cj:Click Date'], x['cj:SID'], x['cj:Operating System'], x['cj:Action Name'], x['cj:Website Name'], x['cj:Ad ID'], x['cj:Click Referring URL']
         ]), axis=1)
         
-        data['ipg:orderId'] = data['ipg:cc'] + data.apply(lambda x: filter(str.isdigit, x['cj:Order ID']) or x['cj:Order ID'], axis=1)
+        data['ipg:orderId'] = data['ipg:cc'] + data.apply(lambda x: filter(str.isdigit, str(x['cj:Order ID'])) or str(x['cj:Order ID']), axis=1)
         data['ipg:currency'] = "USD"
         data['ipg:orderValue'] = data['cj:Sale Amount (USD)'] 
         data['ipg:commission'] = data['cj:Publisher Commission (USD)'] 
@@ -166,7 +167,7 @@ def get_transactions(sdate, edate):
         data['ipg:device'] = data.apply(lambda x: detect_device(x['cj:Operating System']), axis=1)
 
         data['ipg:source'] = data['cj:SID']
-        data['ipg:url'] = data['cj:Click Referring URL']
+        data['ipg:exitUrl'] = data['cj:Click Referring URL']
 
     if len(data) > 0:
         data = convert_transactions(data)

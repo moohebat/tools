@@ -8,4 +8,3 @@ PASSWORD = 'iprice2015'
 
 def get_transactions(sdate, edate):
     return []
-

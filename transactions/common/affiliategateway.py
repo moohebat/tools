@@ -107,6 +107,6 @@ def get_transactions(url, username, password, sdate, edate, affiliate):
         data['ipg:device'] = pandas.np.nan
 
         data['ipg:source'] = data['ag:AffiliateSubId']
-        data['ipg:url'] = data['ag:OriginURL']
+        data['ipg:exitUrl'] = data['ag:OriginURL']
     
     return data

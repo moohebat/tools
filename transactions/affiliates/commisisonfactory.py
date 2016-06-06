@@ -6,3 +6,4 @@ AFFILIATE = 'ipricegroup'
 
 def get_transactions(sdate, edate):
     return []
+    

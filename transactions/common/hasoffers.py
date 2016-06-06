@@ -12,10 +12,7 @@ def get_performance(url, key, network, sdate, edate):
         'Stat.source'
     ]
     params['fields[]'] = [
-        'Stat.date',
-        'Stat.clicks',
-        'Stat.cpc',
-        'Stat.payout_type'
+        'Stat.date'
     ]
     params['filters[Stat.payout_type][conditional]'] = 'EQUAL_TO'
     params['filters[Stat.payout_type][values]'] = 'cpc'
@@ -28,14 +25,13 @@ def get_conversions(url, key, network, sdate, edate, currency=None):
     params['fields[]'] = [
         'Stat.advertiser_info', # ad_sub1 query parameter
         'Stat.datetime',
-        'Stat.conversion_status',
         'Stat.refer', # referer URL
         'Stat.sale_amount', 
         'Stat.ad_id', # transaction ID for the cookie
         'Stat.id', # unique ID for the conversion
-        'ConversionsMobile.device_brand', 
-        'ConversionsMobile.device_model', 
-        'ConversionsMobile.device_os'
+        'ConversionsMobile.device_os',
+        'Stat.status',
+        'Stat.status_code'
     ]
     return parse_cps(request(url, key, network, params, sdate, edate, currency))
     
@@ -50,7 +46,7 @@ def request(url, key, network, params, sdate, edate, currency):
         params['Target'] = 'Affiliate_Report'
         params['limit'] = 10000
         params['page'] = page
-        params['hour_offest'] = '8' # TODO: check whether this is correct
+        params['hour_offest'] = '8' # TODO (0): check whether this is correct for all merchants
         params['totals'] = 0
         params['filters[Stat.date][conditional]'] = 'BETWEEN'
         params['filters[Stat.date][values][]'] = [sdate.isoformat(), edate.isoformat()]
@@ -109,7 +105,6 @@ def request(url, key, network, params, sdate, edate, currency):
     
     
 def parse_cpc(data):
-  # TODO (1): implement properly
   if len(data) > 0:
     data['ipg:cc'] = data.apply(lambda x: detect_cc("", x['ho:Stat.affiliate_info2'], x['ho:Offer.name'], x['ho:Country.name']), axis=1)
     data['ipg:merchantName'] = data['ho:Offer.name']
@@ -122,12 +117,13 @@ def parse_cpc(data):
     data['ipg:currency'] = data['ho:Stat.currency']
     data['ipg:orderValue'] = pandas.np.nan 
     data['ipg:commission'] = data['ho:Stat.payout'] 
-    data['ipg:status'] = pandas.np.nan
+    data['ipg:status'] = "approved"
 
-    data['ipg:device'] = pandas.np.nan
+    data['ipg:device'] = data.apply(lambda x: detect_device(x['ho:Browser.display_name'], None, x['ho:Offer.name']), axis=1)
     
-    data['ipg:source'] = pandas.np.nan
-
+    data['ipg:source'] = data['ho:Stat.source']
+    data['ipg:exitUrl'] =  pandas.np.nan
+    
   return data
 
 
@@ -144,14 +140,12 @@ def parse_cps(data):
     data['ipg:currency'] = data['ho:Stat.currency']
     data['ipg:orderValue'] = data['ho:Stat.sale_amount'] 
     data['ipg:commission'] = data['ho:Stat.payout'] 
-    data['ipg:status'] = data['ho:Stat.conversion_status']
+    data['ipg:status'] = data['ho:Stat.status']
         
-    data['ipg:device'] = data.apply(lambda x: detect_device(x['ho:Browser.display_name'], 
-        x['ho:ConversionsMobile.device_brand'], x['ho:ConversionsMobile.device_model'], x['ho:ConversionsMobile.device_os'],
-        x['ho:Offer.name']), axis=1)
+    data['ipg:device'] = data.apply(lambda x: detect_device(x['ho:Browser.display_name'], x['ho:ConversionsMobile.device_os'], x['ho:Offer.name']), axis=1)
 
     data['ipg:source'] = data['ho:Stat.source']
-    data['ipg:url'] = data['ho:Stat.refer']
+    data['ipg:exitUrl'] = data['ho:Stat.refer']
 
   return data
 
@@ -195,9 +189,19 @@ OS = {
 
 BROWSERS = {
     'Partially Web-Capable Devices' : 'mobile',
-    'NetFront Browser (newer devices)' : 'mobile'
+    'NetFront Browser (newer devices)' : 'mobile',
+    'Android' : 'mobile',
+    'iPad' : 'mobile',
+    'iPhone / iPod' : 'mobile',
+    'BlackBerry (newer devices)' : 'mobile',
+    'Firefox' : 'desktop',
+    'Internet Explorer' : 'desktop',
+    'Chrome' : 'desktop',
+    'Safari' : 'desktop',
+    'Opera' : 'desktop',
+    'Other' : 'desktop'
 }
-def detect_device(browser, brand, model, os, offer):
+def detect_device(browser, os, offer):
     if os:
         if os in OS:
             return OS[os]

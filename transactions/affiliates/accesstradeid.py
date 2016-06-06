@@ -4,5 +4,5 @@ PASSWORD = '123456'
 SITE_CODE = '5232'
 
 def get_transactions(sdate, edate):
-    # TODO: missing subid and order value right now
+    # TODO (1): missing subid and order value before we can implement
     return []

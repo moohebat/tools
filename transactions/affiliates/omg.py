@@ -106,10 +106,10 @@ def get_transactions(sdate, edate):
         data['ipg:commission'] = data['omg:SR'] 
         data['ipg:status'] = data['omg:Status']
     
-        # TODO: calculate split on separate report
+        # TODO (-1): calculate split on separate report
         data['ipg:device'] = pandas.np.nan
 
         data['ipg:source'] = data['omg:UID']
-        data['ipg:url'] = data['omg:Referrer']
+        data['ipg:exitUrl'] = data['omg:Referrer']
         
     return data

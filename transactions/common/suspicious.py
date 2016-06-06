@@ -1,17 +1,20 @@
 import pandas, sys
 
 def detect_zero_commission(order_value, commission):
-    # commission and order value are both zero
-    # TODO (1): proper handling of n/a values and 0 and strings
-    # TODO (1): proper handling of commission 0 or order value 0
-    if pandas.isnull(commission) and pandas.isnull(order_value):
-        return "zero commission/order value"
-    elif commission == 0 and order_value == 0:
-        return "zero commission/order value"
-
-def detect_test_order(fields):
-    # TODO (1): implement
-    pass
+    missing_order_value = False
+    missing_commission = False
+    
+    if pandas.isnull(commission) or commission == 0:
+        missing_commission = True
+    if pandas.isnull(order_value) or order_value == 0:
+        missing_order_value = True
+    
+    if missing_commission and missing_order_value:
+        return "zero commission and order value"
+    elif missing_commission:
+        return "zero commission"
+    elif missing_order_value:
+        return "zero order value"
 
 DUPLICATE_ORDERS = {}
 def detect_duplicate_order(timestamp, order_id, order_value, commission):
@@ -36,7 +39,8 @@ def detect_abnormaly_high(order_value, status):
         return "suspicious order value"
 
 def detect(data):
-    data['ipg:suspicious'] = pandas.np.nan
+    if not "ipg:suspicious" in data.columns.values:
+        data['ipg:suspicious'] = pandas.np.nan
   
     data['ipg:suspicious'] = data.apply(lambda x: detect_zero_commission(x['ipg:orderValue'], x['ipg:commission']) \
      if pandas.isnull(x['ipg:suspicious']) else x['ipg:suspicious'], axis=1)
